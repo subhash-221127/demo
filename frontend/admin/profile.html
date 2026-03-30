@@ -1,0 +1,416 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix Admin – My Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="admin.css" />
+  <style>
+    .profile-wrap { max-width: 700px; margin: 0 auto; padding: 4px 0 40px; }
+
+    .profile-hero {
+      background: linear-gradient(135deg, #0f2346 0%, #1a3c6e 55%, #1e4a8a 100%);
+      border-radius: 20px;
+      padding: 36px 40px 32px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .profile-hero::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 220px; height: 220px;
+      background: rgba(249,115,22,0.08); border-radius: 50%;
+    }
+    .hero-avatar-ring {
+      width: 88px; height: 88px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--orange,#f97316), #fb923c);
+      padding: 3px; flex-shrink: 0;
+      box-shadow: 0 8px 24px rgba(249,115,22,0.35);
+    }
+    .hero-avatar-inner {
+      width: 100%; height: 100%; border-radius: 50%;
+      background: linear-gradient(135deg,#0f2346,#1a3c6e);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; font-weight: 900; color: #fff;
+    }
+    .hero-text { flex: 1; position: relative; z-index: 1; }
+    .hero-name { font-size: 1.6rem; font-weight: 900; color: #fff; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .hero-role { font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 10px; }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 999px; font-size: 0.72rem; font-weight: 700;
+      background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85);
+    }
+    .hero-tag.green { background: rgba(34,197,94,0.2); color: #4ade80; }
+
+    .info-card {
+      background: var(--surface, #fff);
+      border: 1px solid var(--border, #e2e8f0);
+      border-radius: 16px; overflow: hidden; margin-bottom: 16px;
+    }
+    .info-card-header {
+      padding: 14px 20px; display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--border, #e2e8f0);
+      background: var(--surface-2, #f8fafc);
+    }
+    .info-card-icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem; flex-shrink: 0;
+    }
+    .icon-navy   { background: rgba(26,60,110,0.1); color: #1a3c6e; }
+    .icon-purple { background: rgba(139,92,246,0.12); color: #7c3aed; }
+    .info-card-title { font-size: 0.78rem; font-weight: 800; color: var(--text-secondary,#64748b); text-transform: uppercase; letter-spacing: 0.06em; }
+
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 13px 20px; border-bottom: 1px solid var(--surface-2,#f8fafc);
+      font-size: 0.875rem;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .lbl { color: var(--text-secondary,#64748b); font-weight: 500; }
+    .info-row .val { font-weight: 700; color: var(--text-primary,#1e293b); }
+
+    /* Edit form */
+    .edit-form { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .field-group { display: flex; flex-direction: column; gap: 5px; }
+    .field-group label { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary,#64748b); }
+    .field-group input {
+      padding: 11px 14px; border: 1.5px solid var(--border,#e2e8f0);
+      border-radius: 10px; font-size: 0.875rem; color: var(--text-primary,#1e293b);
+      background: var(--surface-2,#f8fafc); outline: none;
+      transition: border-color 0.2s, background 0.2s;
+      font-family: inherit;
+    }
+    .field-group input:focus { border-color: #1a3c6e; background: #fff; }
+    .field-group input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .form-actions { display: flex; gap: 10px; margin-top: 4px; }
+    .btn-save {
+      flex: 1; padding: 12px; background: linear-gradient(135deg,#1a3c6e,#2563eb);
+      color: #fff; border: none; border-radius: 10px; font-weight: 700;
+      font-size: 0.875rem; cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-cancel {
+      padding: 12px 20px; background: none; border: 1.5px solid var(--border,#e2e8f0);
+      border-radius: 10px; font-weight: 700; font-size: 0.875rem; cursor: pointer;
+      color: var(--text-secondary,#64748b); font-family: inherit; transition: all 0.2s;
+    }
+    .btn-cancel:hover { background: var(--surface-2,#f8fafc); }
+
+    .msg-box {
+      padding: 10px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 600;
+      display: none; margin-bottom: 4px;
+    }
+    .msg-error   { background: #fef2f2; color: #dc2626; }
+    .msg-success { background: #f0fdf4; color: #16a34a; }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"   class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+      <a href="complaints.html"  class="sidebar-link"><span class="icon">📋</span> Complaints</a>
+      <a href="officers.html"    class="sidebar-link"><span class="icon">👮</span> Officers</a>
+      <a href="citizens.html"    class="sidebar-link"><span class="icon">👥</span> Citizens</a>
+      <a href="departments.html" class="sidebar-link"><span class="icon">🏢</span> Departments</a>
+      <a href="hierarchy.html"  class="sidebar-link"><span class="icon">🏗️</span> Hierarchy</a>
+      <a href="profile.html"     class="sidebar-link active"><span class="icon">👤</span> My Profile</a>
+    </nav>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title">My Profile</h1>
+        <p class="page-sub">View and update your account</p>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+        <div class="admin-profile" id="admin-profile" onclick="toggleProfileMenu()">
+          <div class="admin-avatar" id="admin-avatar">AD</div>
+          <div class="admin-info">
+            <div class="name" id="admin-name">Admin User</div>
+            <div class="role">Administrator</div>
+          </div>
+          <div class="profile-dropdown" id="profile-dropdown">
+            <a href="profile.html" onclick="event.stopPropagation()">👤 My Profile</a>
+            <a href="../login.html" onclick="event.stopPropagation();doLogout(event)">🚪 Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="profile-wrap">
+
+        <!-- Hero Card -->
+        <div class="profile-hero">
+          <div class="hero-avatar-ring">
+            <div class="hero-avatar-inner" id="hero-initials">AD</div>
+          </div>
+          <div class="hero-text">
+            <div class="hero-name" id="hero-name">Admin User</div>
+            <div class="hero-role">System Administrator</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="hero-tag green">● Active</span>
+              <span class="hero-tag" id="hero-email-tag">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account Info -->
+        <div class="info-card">
+          <div class="info-card-header">
+            <div class="info-card-icon icon-navy">👤</div>
+            <span class="info-card-title">Account Information</span>
+          </div>
+          <div id="info-rows">
+            <div class="info-row"><span class="lbl">Full Name</span><span class="val" id="info-name">—</span></div>
+            <div class="info-row"><span class="lbl">Email</span><span class="val" id="info-email">—</span></div>
+            <div class="info-row"><span class="lbl">Role</span><span class="val">Administrator</span></div>
+            <div class="info-row"><span class="lbl">Account Status</span><span class="val" style="color:#16a34a;">Active</span></div>
+            <div class="info-row"><span class="lbl">Member Since</span><span class="val" id="info-since">—</span></div>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div style="display:flex;gap:12px;margin-bottom:16px;">
+          <button class="btn-save" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="toggleAdminEdit()">
+            ✏️ Edit Profile
+          </button>
+          <button class="btn-save" style="flex:1;background:linear-gradient(135deg,#7c3aed,#6d28d9);display:flex;align-items:center;justify-content:center;gap:8px;" onclick="toggleAdminPw()">
+            🔒 Change Password
+          </button>
+        </div>
+
+        <!-- Edit Name (collapsed) -->
+        <div class="info-card" id="edit-section" style="display:none;">
+          <div class="info-card-header">
+            <div class="info-card-icon icon-navy">✏️</div>
+            <span class="info-card-title">Edit Profile</span>
+          </div>
+          <div class="edit-form">
+            <div class="field-group">
+              <label>Full Name</label>
+              <input type="text" id="edit-name" placeholder="Enter your full name" />
+            </div>
+            <div class="field-group">
+              <label>Email <span style="font-size:0.72rem;color:var(--text-secondary,#64748b);font-weight:400;">(cannot be changed)</span></label>
+              <input type="email" id="edit-email" disabled />
+            </div>
+            <div id="edit-msg" class="msg-box"></div>
+            <div class="form-actions">
+              <button class="btn-save" style="background:#f1f5f9;color:#1e293b;border:1.5px solid #e2e8f0;flex:none;padding:10px 20px;" onclick="toggleAdminEdit()">Cancel</button>
+              <button class="btn-save" id="save-btn" onclick="saveProfile()">💾 Save Changes</button>
+            </div>
+          </div>
+          </div><!-- /admin-edit-body -->
+        </div>
+
+        <!-- Change Password (collapsed) -->
+        <div class="info-card" id="pwd-section" style="display:none;">
+          <div class="info-card-header">
+            <div class="info-card-icon icon-purple">🔒</div>
+            <span class="info-card-title">Change Password</span>
+          </div>
+          <div class="edit-form">
+            <div class="field-group">
+              <label>Current Password</label>
+              <input type="password" id="pwd-current" placeholder="Enter current password" />
+            </div>
+            <div class="field-group">
+              <label>New Password</label>
+              <input type="password" id="pwd-new" placeholder="Min. 6 characters" />
+            </div>
+            <div class="field-group">
+              <label>Confirm New Password</label>
+              <input type="password" id="pwd-confirm" placeholder="Re-enter new password" />
+            </div>
+            <div id="pwd-msg" class="msg-box"></div>
+            <div class="form-actions">
+              <button class="btn-save" style="background:#f1f5f9;color:#1e293b;border:1.5px solid #e2e8f0;flex:none;padding:10px 20px;" onclick="toggleAdminPw()">Cancel</button>
+              <button class="btn-save" id="pwd-btn" onclick="changePassword()">🔐 Update Password</button>
+            </div>
+          </div>
+          </div><!-- /admin-pwd-body -->
+        </div>
+
+      </div><!-- /profile-wrap -->
+    </div><!-- /page-content -->
+  </div><!-- /main-content -->
+</div><!-- /admin-layout -->
+
+<script src="admin-auth.js"></script>
+<script src="theme.js"></script>
+<script>
+  const BASE_URL = 'http://localhost:5000';
+  const _raw = sessionStorage.getItem('cityfix_user');
+  const _user = _raw ? JSON.parse(_raw) : {};
+  const adminId = _user.id || '';
+
+  function toggleAdminPwd() {
+    const body    = document.getElementById('admin-pwd-body');
+    const chevron = document.getElementById('admin-pwd-chevron');
+    if (!body) return;
+    const isOpen = body.style.display !== 'none';
+    body.style.display    = isOpen ? 'none' : 'block';
+    if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+  }
+
+  function toggleProfileMenu() {
+    document.getElementById('profile-dropdown').classList.toggle('show');
+  }
+  document.addEventListener('click', e => {
+    const p = document.getElementById('admin-profile');
+    if (p && !p.contains(e.target))
+      document.getElementById('profile-dropdown').classList.remove('show');
+  });
+
+  function toggleAdminEdit() {
+    const s   = document.getElementById('edit-section');
+    const pw  = document.getElementById('pwd-section');
+    const open = s.style.display !== 'none';
+    s.style.display = open ? 'none' : 'block';
+    if (!open && pw) pw.style.display = 'none';
+  }
+
+  function toggleAdminPw() {
+    const s   = document.getElementById('pwd-section');
+    const edit = document.getElementById('edit-section');
+    const open = s.style.display !== 'none';
+    s.style.display = open ? 'none' : 'block';
+    if (!open && edit) edit.style.display = 'none';
+  }
+
+  function showMsg(elId, msg, type) {
+    const el = document.getElementById(elId);
+    el.textContent = msg;
+    el.className = 'msg-box ' + (type === 'error' ? 'msg-error' : 'msg-success');
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 4000);
+  }
+
+  async function loadProfile() {
+    if (!adminId) return;
+    try {
+      const res = await fetch(`${BASE_URL}/api/admin/me?id=${adminId}`);
+      if (!res.ok) return;
+      const a = await res.json();
+
+      const initials = (a.name || 'AD').split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
+      document.getElementById('hero-initials').textContent = initials;
+      document.getElementById('hero-name').textContent     = a.name || '—';
+      document.getElementById('hero-email-tag').textContent = a.email || '—';
+      document.getElementById('info-name').textContent     = a.name || '—';
+      document.getElementById('info-email').textContent    = a.email || '—';
+      document.getElementById('info-since').textContent    = a.createdAt
+        ? new Date(a.createdAt).toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })
+        : '—';
+      document.getElementById('edit-name').value  = a.name || '';
+      document.getElementById('edit-email').value = a.email || '';
+
+      // Also sync topbar
+      const nameEl   = document.getElementById('admin-name');
+      const avatarEl = document.getElementById('admin-avatar');
+      if (nameEl)   nameEl.textContent   = a.name || 'Admin';
+      if (avatarEl) avatarEl.textContent = initials;
+    } catch (e) {
+      console.warn('Could not load admin profile:', e);
+    }
+  }
+
+  async function saveProfile() {
+    const name  = document.getElementById('edit-name').value.trim();
+    const phone = document.getElementById('edit-phone')?.value.trim() || '';
+    if (!name) { showMsg('edit-msg', 'Name cannot be empty.', 'error'); return; }
+
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+
+    try {
+      const res  = await fetch(`${BASE_URL}/api/admin/me`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ id: adminId, name, phone }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showMsg('edit-msg', 'Profile updated successfully!', 'success');
+        _user.name = name;
+        const newInitials = name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        _user.initials = newInitials;
+        sessionStorage.setItem('cityfix_user', JSON.stringify(_user));
+        await loadProfile();
+        setTimeout(() => { document.getElementById('edit-section').style.display = 'none'; }, 1200);
+      } else {
+        showMsg('edit-msg', data.message || 'Update failed.', 'error');
+      }
+    } catch (e) {
+      showMsg('edit-msg', 'Cannot connect to server.', 'error');
+    }
+    btn.disabled = false; btn.textContent = '💾 Save Changes';
+  }
+
+  async function changePassword() {
+    const current = document.getElementById('pwd-current').value;
+    const newPwd  = document.getElementById('pwd-new').value;
+    const confirm = document.getElementById('pwd-confirm').value;
+
+    if (!current || !newPwd || !confirm) { showMsg('pwd-msg', 'Please fill all fields.', 'error'); return; }
+    if (newPwd.length < 6) { showMsg('pwd-msg', 'New password must be at least 6 characters.', 'error'); return; }
+    if (newPwd !== confirm) { showMsg('pwd-msg', 'New passwords do not match.', 'error'); return; }
+
+    const btn = document.getElementById('pwd-btn');
+    btn.disabled = true; btn.textContent = 'Updating…';
+
+    try {
+      const res  = await fetch(`${BASE_URL}/api/auth/change-password`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ id: adminId, currentPassword: current, newPassword: newPwd }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showMsg('pwd-msg', 'Password updated successfully!', 'success');
+        document.getElementById('pwd-current').value = '';
+        document.getElementById('pwd-new').value     = '';
+        document.getElementById('pwd-confirm').value = '';
+        setTimeout(() => { document.getElementById('pwd-section').style.display = 'none'; }, 1200);
+      } else {
+        showMsg('pwd-msg', data.message || 'Failed to update password.', 'error');
+      }
+    } catch (e) {
+      showMsg('pwd-msg', 'Cannot connect to server.', 'error');
+    }
+    btn.disabled = false; btn.textContent = '🔐 Update Password';
+  }
+
+  document.addEventListener('DOMContentLoaded', loadProfile);
+</script>
+</body>
+</html>

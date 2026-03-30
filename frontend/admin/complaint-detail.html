@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix Admin – Complaint Detail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="admin.css" />
+  <style>
+    .assign-form { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; width:100%; }
+    .assign-form .form-group { display:flex; flex-direction:column; gap:6px; min-width:180px; flex:1; }
+    .assign-form label { font-size:0.8rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em; }
+    .assign-form select { padding:10px 12px; border-radius:10px; border:1.5px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-size:0.9rem; font-family:inherit; outline:none; }
+    .assign-form select:focus { border-color:var(--accent); }
+    .assigned-officer-card { display:flex; align-items:center; gap:14px; background:#f0fdf4; border:1.5px solid #86efac; border-radius:12px; padding:14px 18px; margin-bottom:16px; }
+    .assigned-avatar { width:40px; height:40px; border-radius:50%; background:#22c55e; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.85rem; flex-shrink:0; }
+    .assigned-info .name { font-weight:700; font-size:0.95rem; color:var(--text-primary); }
+    .assigned-info .dept { font-size:0.8rem; color:var(--text-secondary); margin-top:2px; }
+    .action-card { border-radius:16px; padding:20px 24px; margin-bottom:20px; border:1.5px solid var(--border); background:var(--bg-card); }
+    .action-card h4 { margin-bottom:12px; font-size:1rem; }
+    .action-card.green   { background:#f0fdf4; border-color:#86efac; }
+    .action-card.red     { background:#fef2f2; border-color:#fecaca; }
+    .action-card.red h4  { color:#dc2626; }
+    .action-card.darkred { background:#fff1f2; border-color:#fda4af; }
+    .action-card.darkred h4 { color:#be123c; }
+    .reject-textarea { width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid #fca5a5; font-family:inherit; font-size:0.9rem; color:var(--text-primary); background:#fff; resize:vertical; min-height:80px; outline:none; margin-bottom:12px; }
+    .reject-textarea:focus { border-color:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,0.08); }
+    .rejection-reason-box { background:#fef2f2; border:1.5px solid #fecaca; border-radius:12px; padding:14px 16px; margin-top:8px; }
+    .rejection-reason-box .rlabel { font-size:0.75rem; font-weight:800; color:#dc2626; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; }
+    .rejection-reason-box .rtext  { font-size:0.9rem; color:#7f1d1d; line-height:1.6; }
+    .toast { position:fixed; bottom:24px; right:24px; z-index:999; background:#1a3c6e; color:#fff; padding:14px 20px; border-radius:12px; font-weight:600; font-size:0.9rem; box-shadow:0 8px 24px rgba(0,0,0,0.2); transform:translateY(80px); opacity:0; transition:transform 0.3s, opacity 0.3s; }
+    .toast.show    { transform:translateY(0); opacity:1; }
+    .toast.success { background:#16a34a; }
+    .toast.error   { background:#dc2626; }
+
+    /* ── Status Stepper (citizen-style, read-only) ── */
+    .admin-stepper-wrap { margin-bottom: 24px; }
+    .admin-stepper-wrap h4 { margin-bottom: 16px; font-size: 1rem; color: var(--text-primary); }
+    .admin-stepper { display: flex; flex-direction: column; gap: 0; }
+    .ast-step { display: flex; gap: 14px; position: relative; }
+    .ast-step:not(:last-child) .ast-line {
+      position: absolute; left: 17px; top: 36px;
+      width: 2px; height: calc(100% - 4px);
+      background: var(--border, #e2e8f0);
+      z-index: 0;
+    }
+    .ast-step.done .ast-line  { background: #22c55e; }
+    .ast-step.active .ast-line { background: linear-gradient(to bottom, #3b82f6, var(--border,#e2e8f0)); }
+    .ast-dot {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 0.85rem; position: relative; z-index: 1;
+      border: 2px solid var(--border, #e2e8f0);
+      background: var(--bg, #f8fafc);
+      color: var(--text-secondary, #94a3b8);
+    }
+    .ast-step.done  .ast-dot { background: #22c55e; border-color: #22c55e; color: #fff; }
+    .ast-step.active .ast-dot { background: #3b82f6; border-color: #3b82f6; color: #fff; box-shadow: 0 0 0 4px rgba(59,130,246,0.15); }
+    .ast-step.rejected-step .ast-dot { background: #ef4444; border-color: #ef4444; color: #fff; }
+    .ast-body { padding: 4px 0 20px; flex: 1; }
+    .ast-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary, #1e293b); }
+    .ast-desc  { font-size: 0.8rem; color: var(--text-secondary, #64748b); margin-top: 2px; }
+    .ast-date  { font-size: 0.78rem; color: var(--text-secondary, #94a3b8); margin-top: 4px; display: flex; align-items: center; gap: 5px; }
+    .ast-step.pending .ast-title { color: var(--text-secondary, #94a3b8); font-weight: 500; }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"   class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+      <a href="complaints.html"  class="sidebar-link active"><span class="icon">📋</span> Complaints</a>
+      <a href="officers.html"    class="sidebar-link"><span class="icon">👮</span> Officers</a>
+      <a href="citizens.html"    class="sidebar-link"><span class="icon">👥</span> Citizens</a>
+      <a href="departments.html" class="sidebar-link"><span class="icon">🏢</span> Departments</a>
+      <a href="hierarchy.html"  class="sidebar-link"><span class="icon">🏗️</span> Hierarchy</a>
+    </nav>
+</aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Complaint Detail</h1>
+        <span class="breadcrumb" id="breadcrumb">Loading…</span>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+        <div class="admin-profile" id="admin-profile" onclick="document.getElementById('profile-dropdown').classList.toggle('show')">
+          <div class="admin-avatar" id="admin-avatar">AD</div>
+          <div class="admin-info">
+            <div class="name" id="admin-name">Admin User</div>
+            <div class="role">Administrator</div>
+          </div>
+          <div class="profile-dropdown" id="profile-dropdown">
+            <a href="profile.html">👤 My Profile</a>
+            <a href="../login.html" onclick="doLogout(event)">🚪 Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content" id="page-content">
+      <div style="text-align:center;padding:80px 20px;color:var(--text-secondary);">Loading complaint…</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="theme.js"></script>
+<script src="admin-auth.js"></script>
+<script>
+
+  const complaintId = new URLSearchParams(window.location.search).get('id');
+  let complaint   = null;
+  let departments = [];
+  let officers    = [];
+
+  // ── Helpers ────────────────────────────────────────────────────
+  function isObjectId(s) { return typeof s === 'string' && /^[a-f\d]{24}$/i.test(s); }
+
+  // Resolve department name from ObjectId or plain string
+  function resolveDept(dept) {
+    if (!dept) return '';
+    if (isObjectId(dept)) {
+      const found = departments.find(d => d._id === dept);
+      return found ? found.name : '';
+    }
+    return dept;
+  }
+
+  // Find best matching department from DB list for a given raw dept string
+  // 1. Exact match  2. Partial keyword match  3. First dept in list
+  function findBestDept(rawDept) {
+    if (!departments.length) return null;
+    if (!rawDept) return departments[0];
+
+    const resolved = resolveDept(rawDept);
+    const lower    = resolved.toLowerCase();
+
+    // Exact match
+    let match = departments.find(d => d.name.toLowerCase() === lower);
+    if (match) return match;
+
+    // Partial keyword match (e.g. "Roads & Potholes" → "Roads & Infrastructure")
+    const keywords = lower.split(/\s+&?\s+|\s+/).filter(w => w.length > 3);
+    for (const kw of keywords) {
+      match = departments.find(d => d.name.toLowerCase().includes(kw));
+      if (match) return match;
+    }
+
+    // Default to first dept
+    return departments[0];
+  }
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + (type || 'success');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  function statusBadge(s) {
+    const cls   = { pending:'pending', assigned:'in-progress', in_progress:'in-progress', resolved:'resolved', rejected:'rejected' };
+    const label = { pending:'Pending', assigned:'Assigned', in_progress:'In Progress', resolved:'Resolved', rejected:'Rejected' };
+    return '<span class="status-badge ' + (cls[s] || s) + '">' + (label[s] || s) + '</span>';
+  }
+  function severityBadge(s) {
+    return '<span class="priority-badge ' + s + '">' + s.charAt(0).toUpperCase() + s.slice(1) + '</span>';
+  }
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+  function initials(name) {
+    return (name || '').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
+  }
+
+  // Level label helper
+  function levelLabel(lvl) {
+    const map = { 1: 'L1 · Field Officer', 2: 'L2 · Senior Officer', 3: 'L3 · Director' };
+    return map[lvl] || ('L' + lvl);
+  }
+
+  // ── Load officers for a department name ──────────────────────────
+  // levelOnly: true  → fetch only level-1 officers (initial assignment)
+  //            false → fetch all levels (reassignment)
+  async function loadOfficersByDept(deptName, levelOnly) {
+    if (!deptName) return;
+    try {
+      const qs = levelOnly ? '?level=1' : '';
+      const res = await fetch('/api/officers/by-department/' + encodeURIComponent(deptName) + qs);
+      officers  = await res.json();
+    } catch { officers = []; }
+
+    const sel = document.getElementById('officer-select');
+    if (!sel) return;
+
+    if (!officers.length) {
+      sel.innerHTML = '<option value="">' + (levelOnly ? 'No active L1 officers in this department' : 'No active officers in this department') + '</option>';
+      return;
+    }
+
+    sel.innerHTML = '<option value="">— Select officer —</option>' +
+      officers.map(o =>
+        '<option value="' + o._id + '">' +
+        '[' + (o.level ? 'L' + o.level : '?') + '] ' + o.name + ' — ' + o.designation +
+        '</option>'
+      ).join('');
+  }
+
+  // When admin changes department in dropdown → reload with same level context
+  window.onDeptChange = async function() {
+    const sel = document.getElementById('dept-select');
+    // isReassign data attribute is set on the select when the form is built
+    const isReassign = sel && sel.dataset.reassign === 'true';
+    if (sel && sel.value) await loadOfficersByDept(sel.value, !isReassign);
+  };
+
+  // ── Assign ─────────────────────────────────────────────────────
+  window.assignOfficer = async function() {
+    const officerId = document.getElementById('officer-select').value;
+    if (!officerId) { showToast('Please select an officer.', 'error'); return; }
+
+    const btn = document.getElementById('assign-btn');
+    btn.disabled = true; btn.textContent = 'Assigning…';
+
+    try {
+      const res  = await fetch('/api/admin/complaints/' + complaintId + '/assign', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ officerId })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        complaint = data.complaint;
+        showToast('✅ Assigned to ' + complaint.officerId.name + '!', 'success');
+        await renderPage();
+      } else {
+        showToast(data.message || 'Failed to assign.', 'error');
+        btn.disabled = false; btn.textContent = '✅ Assign';
+      }
+    } catch {
+      showToast('Cannot connect to server.', 'error');
+      btn.disabled = false; btn.textContent = '✅ Assign';
+    }
+  };
+
+  // ── Reject ─────────────────────────────────────────────────────
+  window.rejectComplaint = async function() {
+    const reason = document.getElementById('reject-reason').value.trim();
+    if (!reason) {
+      showToast('Please enter a reason for rejection.', 'error');
+      document.getElementById('reject-reason').focus();
+      return;
+    }
+    if (!confirm('Reject this complaint? The citizen will see your reason.')) return;
+
+    const btn = document.getElementById('reject-btn');
+    btn.disabled = true; btn.textContent = 'Rejecting…';
+
+    try {
+      const res  = await fetch('/api/admin/complaints/' + complaintId + '/reject', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        complaint.status          = 'rejected';
+        complaint.rejectionReason = reason;
+        showToast('Complaint rejected.', 'error');
+        await renderPage();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        showToast(data.message || 'Failed to reject.', 'error');
+        btn.disabled = false; btn.textContent = '❌ Reject Complaint';
+      }
+    } catch {
+      showToast('Cannot connect to server.', 'error');
+      btn.disabled = false; btn.textContent = '❌ Reject Complaint';
+    }
+  };
+
+  // ── Delete ─────────────────────────────────────────────────────
+  window.deleteComplaint = async function() {
+    if (!confirm('Permanently delete this complaint? This cannot be undone.')) return;
+
+    const btn = document.getElementById('delete-btn');
+    btn.disabled = true; btn.textContent = 'Deleting…';
+
+    try {
+      const res  = await fetch('/api/admin/complaints/' + complaintId, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('Complaint deleted.', 'success');
+        setTimeout(() => { window.location.href = 'complaints.html'; }, 1500);
+      } else {
+        showToast(data.message || 'Failed to delete.', 'error');
+        btn.disabled = false; btn.textContent = '🗑 Delete Complaint';
+      }
+    } catch {
+      showToast('Cannot connect to server.', 'error');
+      btn.disabled = false; btn.textContent = '🗑 Delete Complaint';
+    }
+  };
+
+  // ── Render ─────────────────────────────────────────────────────
+  async function renderPage() {
+    const c          = complaint;
+    const citizen    = c.citizenId || {};
+    const officer    = c.officerId || null;
+    const isResolved = c.status === 'resolved';
+    const isRejected = c.status === 'rejected';
+    const isDeletable = isResolved || isRejected;
+
+    // Raw dept from complaint (could be "Roads & Potholes" or an ObjectId)
+    const rawDept    = resolveDept(c.department) || c.department || '';
+
+    // Find best matching DB department to pre-select and load officers for
+    const bestDept     = findBestDept(rawDept);
+    const selectedDept = bestDept ? bestDept.name : '';
+
+    document.getElementById('breadcrumb').textContent = (c.complaintId || '—') + ' — ' + (rawDept || '—');
+
+    // Build ALL departments dropdown — pre-select the best match
+    const deptOptions = departments.map(d =>
+      '<option value="' + d.name + '"' + (d.name === selectedDept ? ' selected' : '') + '>' + d.name + '</option>'
+    ).join('');
+
+    // ── Build action section ───────────────────────────────────
+    let actionSection = '';
+    const ai = c.aiVerification || {};
+    // Show yellow AI review banner whenever AI flagged the complaint and admin hasn't acted yet
+    const needsAiReview = ai.passed === false && !ai.adminReviewed && ai.checkedAt;
+
+    if (needsAiReview) {
+      // ── Yellow AI Review Banner ────────────────────────────────
+      const score      = (ai.matchScore !== null && ai.matchScore !== undefined) ? ai.matchScore : null;
+      const scoreLabel = score !== null ? score + '/100' : 'N/A';
+      const scoreColor = score !== null ? (score >= 50 ? '#d97706' : '#dc2626') : '#6b7280';
+
+      // Before / After thumbnails embedded inside the banner
+      let thumbsHTML = '';
+      if ((c.evidencePaths && c.evidencePaths.length) || (c.resolutionEvidencePaths && c.resolutionEvidencePaths.length)) {
+        thumbsHTML = '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;">';
+        if (c.evidencePaths && c.evidencePaths.length) {
+          thumbsHTML +=
+            '<div style="flex:1;min-width:200px;">' +
+            '<div style="font-size:0.72rem;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">📷 Before (Citizen)</div>' +
+            c.evidencePaths.map(p => '<img src="/uploads/' + p.split('/').pop() + '" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:2px solid #fde68a;cursor:pointer;margin-bottom:6px;" onclick="window.open(this.src,\'_blank\')" />').join('') +
+            '</div>';
+        }
+        if (c.resolutionEvidencePaths && c.resolutionEvidencePaths.length) {
+          thumbsHTML +=
+            '<div style="flex:1;min-width:200px;">' +
+            '<div style="font-size:0.72rem;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">📷 After (Officer)</div>' +
+            c.resolutionEvidencePaths.map(p => '<img src="/uploads/' + p.split('/').pop() + '" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:2px solid #fde68a;cursor:pointer;margin-bottom:6px;" onclick="window.open(this.src,\'_blank\')" />').join('') +
+            '</div>';
+        }
+        thumbsHTML += '</div>';
+      }
+
+      actionSection =
+        '<div style="background:#fef9c3;border:2px solid #fde68a;border-radius:16px;padding:22px 24px;margin-bottom:20px;">' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">' +
+        '<span style="font-size:1.4rem;">🤖</span>' +
+        '<div>' +
+        '<div style="font-size:0.95rem;font-weight:800;color:#78350f;">AI Review Required — Low Match Score</div>' +
+        '<div style="font-size:0.8rem;color:#92400e;margin-top:2px;">The officer\'s resolution photo scored below the 70% threshold. Review the evidence below and take action.</div>' +
+        '</div></div>' +
+        '<div style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #fde68a;border-radius:999px;padding:6px 16px;margin-bottom:12px;">' +
+        '<span style="font-size:0.7rem;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.08em;">AI Score</span>' +
+        '<span style="font-size:1.15rem;font-weight:900;color:' + scoreColor + ';">' + scoreLabel + '</span>' +
+        '</div>' +
+        '<div style="font-size:0.875rem;color:#78350f;line-height:1.7;margin-bottom:16px;background:#fffde7;border-radius:8px;padding:10px 14px;">' +
+        '<strong>AI Summary:</strong> ' + (ai.summary || 'No summary available.') +
+        '</div>' +
+        thumbsHTML +
+        '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
+        '<button onclick="adminReviewComplaint(\'' + complaintId + '\', \'approve\')" style="padding:11px 22px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:0.875rem;font-weight:700;cursor:pointer;">' +
+        '✅ Approve &amp; Close Complaint</button>' +
+        '<button onclick="adminReviewComplaint(\'' + complaintId + '\', \'reassign\')" style="padding:11px 22px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:0.875rem;font-weight:700;cursor:pointer;">' +
+        '🔁 Reassign to Officer</button>' +
+        '</div>' +
+        '</div>';
+
+    } else if (isResolved) {
+      let aiBanner = '';
+      if (ai.adminReviewed) {
+        const actionLabel = ai.adminAction === 'approved' ? '✅ Manually Approved by Admin' : '🔁 Reassigned by Admin (re-resolved)';
+        aiBanner = '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:0.82rem;color:#15803d;font-weight:600;">🤖 AI Score: ' + (ai.matchScore !== null ? ai.matchScore + '/100' : 'N/A') + ' — ' + actionLabel + '</div>';
+      } else if (ai.passed === true) {
+        aiBanner = '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:0.82rem;color:#15803d;font-weight:600;">🤖 AI Verification passed — Score: ' + (ai.matchScore !== null ? ai.matchScore + '/100' : 'N/A') + '</div>';
+      }
+      actionSection = aiBanner +
+        '<div class="action-card green"><div style="font-weight:700;color:#16a34a;">✅ This complaint has been resolved.' + (ai.passed === true ? ' AI verification passed.' : '') + '</div></div>';
+
+    } else if (isRejected) {
+      actionSection =
+        '<div class="action-card red"><h4>❌ Complaint Rejected</h4>' +
+        (c.rejectionReason
+          ? '<div class="rejection-reason-box"><div class="rlabel">Rejection Reason</div><div class="rtext">' + c.rejectionReason + '</div></div>'
+          : '<div style="color:var(--text-secondary);font-size:0.85rem;margin-top:4px;">No reason was provided.</div>') +
+        '</div>';
+
+    } else {
+      // Pending / assigned — show assign form
+      // isReassign = an officer is already assigned (admin is changing assignment)
+      const isReassign = !!officer;
+
+      const officerLevelBadge = officer && officer.level
+        ? ' <span style="background:#dbeafe;color:#1d4ed8;font-size:0.7rem;font-weight:700;padding:2px 7px;border-radius:999px;">L' + officer.level + '</span>'
+        : '';
+
+      const currentlyAssigned = officer
+        ? '<div style="margin-bottom:16px;">' +
+          '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;font-weight:600;">Currently Assigned:</div>' +
+          '<div class="assigned-officer-card">' +
+          '<div class="assigned-avatar">' + initials(officer.name) + '</div>' +
+          '<div class="assigned-info">' +
+          '<div class="name">' + officer.name + officerLevelBadge + '</div>' +
+          '<div class="dept">' + officer.designation + ' · ' + (officer.departmentName || '') + '</div>' +
+          '<div class="dept">📧 ' + (officer.email || '') + ' · 📞 ' + (officer.phone || '') + '</div>' +
+          '</div></div></div>' +
+          '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;font-weight:600;">Reassign to a different officer (all levels):</div>'
+        : '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;font-weight:600;">Select a department and officer to handle this complaint (Level 1 officers only):</div>';
+
+      const rejectSection = !officer
+        ? '<div class="action-card red"><h4>❌ Reject Complaint</h4>' +
+          '<p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:10px;">Provide a reason — this will be shown to the citizen.</p>' +
+          '<textarea id="reject-reason" class="reject-textarea" placeholder="e.g. This complaint is a duplicate of CMP-2026-0012, or outside our jurisdiction…"></textarea>' +
+          '<button class="btn btn-danger btn-sm" id="reject-btn" onclick="rejectComplaint()">❌ Reject Complaint</button>' +
+          '</div>'
+        : '';
+
+      actionSection =
+        '<div class="assign-section"><h4>👮 ' + (isReassign ? 'Reassign Officer' : 'Assign Officer') + '</h4>' +
+        currentlyAssigned +
+        '<div class="assign-form">' +
+        '<div class="form-group"><label>Department</label>' +
+        '<select id="dept-select" onchange="onDeptChange()" data-reassign="' + isReassign + '">' + deptOptions + '</select></div>' +
+        '<div class="form-group"><label>Officer</label>' +
+        '<select id="officer-select"><option value="">Loading officers…</option></select></div>' +
+        '<button class="btn btn-primary btn-sm" id="assign-btn" onclick="assignOfficer()" style="height:42px;align-self:flex-end;min-width:100px;">✅ ' + (isReassign ? 'Reassign' : 'Assign') + '</button>' +
+        '</div></div>' +
+        rejectSection;
+    }
+
+    // ── Evidence Comparison (shown separately only when NOT inside AI banner) ──
+    let combinedEvidenceHTML = '';
+    if (!needsAiReview && ((c.evidencePaths && c.evidencePaths.length) || (c.resolutionEvidencePaths && c.resolutionEvidencePaths.length))) {
+      combinedEvidenceHTML = '<div class="info-card" style="margin-bottom:24px;"><h4>📸 Evidence Comparison</h4><div style="display:flex; gap:24px; flex-wrap:wrap; margin-top:12px;">';
+      
+      if (c.evidencePaths && c.evidencePaths.length) {
+        combinedEvidenceHTML += '<div style="flex:1; min-width:300px;"><div style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;">Before (Citizen)</div><div style="display:flex;gap:12px;flex-direction:column;">' +
+          c.evidencePaths.map(p => '<img src="/uploads/' + p.split('/').pop() + '" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;border:1px solid var(--border);cursor:pointer;" onclick="window.open(this.src,\'_blank\')" />').join('') + '</div></div>';
+      }
+
+      if (c.resolutionEvidencePaths && c.resolutionEvidencePaths.length) {
+        // Show ONLY the latest resolution evidence (last one in the array)
+        const latestResolution = c.resolutionEvidencePaths[c.resolutionEvidencePaths.length - 1];
+        combinedEvidenceHTML += '<div style="flex:1; min-width:300px;"><div style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;">After (Officer - Latest Upload)</div><div style="display:flex;gap:12px;flex-direction:column;">' +
+          '<img src="/uploads/' + latestResolution.split('/').pop() + '" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;border:1px solid var(--border);cursor:pointer;" onclick="window.open(this.src,\'_blank\')" />' + '</div></div>';
+      }
+      
+      combinedEvidenceHTML += '</div></div>';
+    }
+
+    // ── Render everything ──────────────────────────────────────
+    document.getElementById('page-content').innerHTML =
+      '<a href="complaints.html" class="btn btn-outline btn-sm" style="margin-bottom:20px;">← Back to Complaints</a>' +
+
+      // Header
+      '<div class="detail-header">' +
+      '<div><h2>' + c.title + '</h2>' +
+      '<div class="meta" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;align-items:center;">' +
+      statusBadge(c.status) + severityBadge(c.severity) +
+      '<span style="font-size:0.82rem;color:var(--text-secondary);">📅 ' + fmtDate(c.createdAt) + '</span>' +
+      '<span style="font-size:0.82rem;color:var(--text-secondary);">🏢 ' + (rawDept || '—') + '</span>' +
+      '</div></div>' +
+      '<span style="font-size:0.85rem;color:var(--text-placeholder);font-weight:700;">' + (c.complaintId || '—') + '</span>' +
+      '</div>' +
+
+      // Info grid
+      '<div class="detail-grid">' +
+      '<div class="info-card"><h4>📋 Complaint Information</h4>' +
+      '<div class="info-row"><span class="info-label">Complaint ID</span><span class="info-value">' + (c.complaintId || '—') + '</span></div>' +
+      '<div class="info-row"><span class="info-label">Department</span><span class="info-value">' + (rawDept || '—') + '</span></div>' +
+      '<div class="info-row"><span class="info-label">Status</span><span class="info-value">' + statusBadge(c.status) + '</span></div>' +
+      '<div class="info-row"><span class="info-label">Severity</span><span class="info-value">' + severityBadge(c.severity) + '</span></div>' +
+      '<div class="info-row"><span class="info-label">Filed On</span><span class="info-value">' + fmtDate(c.createdAt) + '</span></div>' +
+      (c.assignedAt ? '<div class="info-row"><span class="info-label">Assigned On</span><span class="info-value">' + fmtDate(c.assignedAt) + '</span></div>' : '') +
+      (c.location && c.location.address ? '<div class="info-row"><span class="info-label">Location</span><span class="info-value">📍 ' + c.location.address + '</span></div>' : '') +
+      '</div>' +
+      '<div class="info-card"><h4>👤 Citizen Information</h4>' +
+      (c.isAnonymous ? '<div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:10px 14px;margin:12px 16px 4px;font-size:0.82rem;color:#92400e;font-weight:600;"><i class="fa-solid fa-user-secret" style="margin-right:6px;"></i>Identity is completely masked by citizen. Contact details are hidden.</div>' : '') +
+      '<div class="info-row"><span class="info-label">Name</span><span class="info-value">' + (citizen.name || '—') + '</span></div>' +
+      '<div class="info-row"><span class="info-label">Email</span><span class="info-value">' + (citizen.email || '—') + '</span></div>' +
+      '<div class="info-row"><span class="info-label">Phone</span><span class="info-value">' + (citizen.phone || '—') + '</span></div>' +
+      '<div style="margin-top:16px;"><div style="font-size:0.75rem;font-weight:800;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Description</div>' +
+      '<div class="description-box">' + c.description + '</div></div>' +
+      '</div></div>' +
+
+      actionSection +
+      combinedEvidenceHTML +
+
+      // ── Full Status Stepper (citizen-style, read-only for admin) ──
+      buildAdminStepper(c) +
+
+      // Activity log (keep existing compact log below stepper)
+      '<div class="timeline" style="margin-top:24px;"><h4>📅 Activity Log</h4>' +
+      '<div class="timeline-item"><div class="timeline-dot orange"></div>' +
+      '<div class="timeline-content"><div class="event">Complaint Filed</div>' +
+      '<div class="time">' + fmtDate(c.createdAt) + ' — by ' + (citizen.name || 'Citizen') + '</div></div></div>' +
+      (c.assignedAt
+        ? '<div class="timeline-item"><div class="timeline-dot blue"></div>' +
+          '<div class="timeline-content"><div class="event">Assigned to ' + (officer ? officer.name : 'Officer') + '</div>' +
+          '<div class="time">' + fmtDate(c.assignedAt) + ' — by Admin</div></div></div>'
+        : '') +
+      (c.status === 'in_progress'
+        ? '<div class="timeline-item"><div class="timeline-dot blue"></div>' +
+          '<div class="timeline-content"><div class="event">Work In Progress</div>' +
+          '<div class="time">Officer updated status</div></div></div>'
+        : '') +
+      (isResolved
+        ? '<div class="timeline-item"><div class="timeline-dot green"></div>' +
+          '<div class="timeline-content"><div class="event">Complaint Resolved ✅</div>' +
+          '<div class="time">' + (fmtDate(c.resolvedAt) || '—') + '</div></div></div>'
+        : '') +
+      (isRejected
+        ? '<div class="timeline-item"><div class="timeline-dot red"></div>' +
+          '<div class="timeline-content"><div class="event">Complaint Rejected ❌</div>' +
+          '<div class="time">Rejected by Admin' + (c.rejectionReason ? ' — ' + c.rejectionReason : '') + '</div></div></div>'
+        : '') +
+      '</div>' + 
+      
+      // Delete section (resolved/rejected only) mapped to bottom right
+      (isDeletable 
+        ? '<div style="display:flex; justify-content:flex-end; margin-top:30px;">' +
+          '<div style="text-align:right;">' +
+          '<button class="btn btn-danger" id="delete-btn" onclick="deleteComplaint()" style="background:#be123c;border-color:#be123c;padding:10px 20px;font-size:0.9rem;border-radius:10px;color:#fff;cursor:pointer;"><i class="fa-solid fa-trash"></i> Permanently Delete Complaint</button>' +
+          '<div style="font-size:0.75rem;color:var(--text-secondary);margin-top:8px;">This action cannot be undone.</div>' +
+          '</div></div>'
+        : '');
+
+    // Load officers for the best-matched department AFTER DOM is rendered
+    // Skip when AI review banner is showing (no assign form in DOM)
+    if (!isResolved && !isRejected && !needsAiReview && selectedDept) {
+      // levelOnly=true for fresh assignment (no officer yet), false for reassignment
+      await loadOfficersByDept(selectedDept, !officer);
+    }
+  }
+
+  // ── Admin Stepper (citizen-style, read-only) ────────────────────
+  function buildAdminStepper(c) {
+    const isResolved = c.status === 'resolved';
+    const isRejected = c.status === 'rejected';
+    const isAssigned = ['assigned','in_progress','resolved'].includes(c.status);
+    const isInProg   = ['in_progress','resolved'].includes(c.status);
+
+    let steps;
+    if (isRejected) {
+      steps = [
+        { label: 'Submitted',  icon: 'fa-paper-plane',    state: 'done',    date: c.createdAt,  desc: 'Complaint filed by citizen.' },
+        { label: 'Reviewed',   icon: 'fa-magnifying-glass', state: 'done',   date: '',           desc: 'Reviewed by admin.' },
+        { label: 'Rejected',   icon: 'fa-circle-xmark',   state: 'rejected', date: '',           desc: c.rejectionReason ? 'Reason: ' + c.rejectionReason : 'Could not be processed.' },
+        { label: 'Closed',     icon: 'fa-lock',           state: 'active',  date: '',           desc: 'Case closed.' },
+      ];
+    } else {
+      steps = [
+        { label: 'Submitted',   icon: 'fa-paper-plane',       state: 'done',    date: c.createdAt,  desc: 'Filed by ' + ((c.citizenId && c.citizenId.name) || 'citizen') + '.' },
+        { label: 'Verified',    icon: 'fa-shield-halved',      state: isAssigned || isInProg || isResolved ? 'done' : (c.status === 'pending' ? 'active' : 'pending'), date: '', desc: 'Reviewed by admin.' },
+        { label: 'Assigned',    icon: 'fa-user-tie',           state: isAssigned ? 'done' : 'pending', date: c.assignedAt, desc: c.officerId ? 'Assigned to ' + c.officerId.name + '.' : 'Pending assignment.' },
+        { label: 'In Progress', icon: 'fa-screwdriver-wrench', state: isInProg ? 'done' : (c.status === 'assigned' ? 'active' : 'pending'), date: '', desc: 'Officer working on it.' },
+        { label: 'Resolved',    icon: 'fa-circle-check',       state: isResolved ? 'done' : 'pending', date: c.resolvedAt, desc: isResolved ? 'Issue successfully resolved.' : 'Pending resolution.' },
+        { label: 'Closed',      icon: 'fa-lock',               state: isResolved ? 'active' : 'pending', date: c.resolvedAt, desc: 'Case closed.' },
+      ];
+      // For 'assigned' status, mark verified as done, assigned as active
+      if (c.status === 'assigned') {
+        steps[1].state = 'done';
+        steps[2].state = 'active';
+      }
+    }
+
+    const stepsHTML = steps.map((s, i) => {
+      const isLast    = i === steps.length - 1;
+      const dotIcon   = s.state === 'done' || s.state === 'rejected' ? 'fa-check' :
+                        s.state === 'active' ? s.icon : 'fa-circle';
+      const dateStr   = s.date ? fmtDate(s.date) : '';
+      return [
+        '<div class="ast-step ' + s.state + (s.state === 'rejected' ? ' rejected-step' : '') + '">',
+          isLast ? '' : '<div class="ast-line"></div>',
+          '<div class="ast-dot"><i class="fa-solid ' + dotIcon + '"></i></div>',
+          '<div class="ast-body">',
+            '<div class="ast-title">' + s.label + '</div>',
+            '<div class="ast-desc">' + s.desc + '</div>',
+            dateStr ? '<div class="ast-date"><i class="fa-regular fa-clock"></i> ' + dateStr + '</div>' : '',
+          '</div>',
+        '</div>'
+      ].join('');
+    }).join('');
+
+    return '<div class="admin-stepper-wrap"><h4>📊 Complaint Status</h4><div class="admin-stepper">' + stepsHTML + '</div></div>';
+  }
+
+  // ── Init ───────────────────────────────────────────────────────
+  async function init() {
+    if (!complaintId) {
+      document.getElementById('page-content').innerHTML =
+        '<div style="text-align:center;padding:80px 20px;">' +
+        '<div style="font-size:4rem;margin-bottom:16px;">🔍</div>' +
+        '<h2>No Complaint ID</h2>' +
+        '<a href="complaints.html" class="btn btn-primary" style="margin-top:16px;">← Back to Complaints</a></div>';
+      return;
+    }
+    try {
+      const [cRes, dRes] = await Promise.all([
+        fetch('/api/admin/complaints/' + complaintId),
+        fetch('/api/departments')
+      ]);
+      complaint   = await cRes.json();
+      departments = await dRes.json();
+      if (!cRes.ok) throw new Error(complaint.message || 'Failed to load complaint.');
+      await renderPage();
+    } catch (err) {
+      document.getElementById('page-content').innerHTML =
+        '<div style="text-align:center;padding:80px 20px;">' +
+        '<div style="font-size:4rem;margin-bottom:16px;">❌</div>' +
+        '<h2>Failed to Load</h2>' +
+        '<p style="color:var(--text-secondary);">' + err.message + '</p>' +
+        '<a href="complaints.html" class="btn btn-primary" style="margin-top:16px;">← Back to Complaints</a></div>';
+    }
+  }
+
+  // ── Admin review of AI-flagged complaint ──────────────────────
+  window.adminReviewComplaint = async function(id, action) {
+    const label = action === 'approve' ? 'Approve & close this complaint?' : 'Reassign back to the officer for re-resolution?';
+    if (!confirm(label)) return;
+    try {
+      const res  = await fetch('/api/complaint/' + id + '/admin-review', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(action === 'approve' ? '✅ Complaint approved and closed.' : '🔁 Complaint reassigned to officer.', 'success');
+        complaint = data.complaint || complaint;
+        await init();
+      } else {
+        showToast(data.message || 'Action failed.', 'error');
+      }
+    } catch {
+      showToast('Cannot connect to server.', 'error');
+    }
+  };
+
+  document.addEventListener('click', e => {
+    const p = document.getElementById('admin-profile');
+    if (p && !p.contains(e.target))
+      document.getElementById('profile-dropdown').classList.remove('show');
+  });
+
+  init();
+
+</script>
+</body>
+</html>

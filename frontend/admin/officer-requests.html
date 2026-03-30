@@ -1,0 +1,129 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix Admin – Officer Requests</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+<div class="admin-layout">
+
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
+          stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"  class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+      <a href="complaints.html" class="sidebar-link"><span class="icon">📋</span> Complaints <span class="badge">18</span></a>
+      <a href="officers.html"   class="sidebar-link"><span class="icon">👮</span> Officers</a>
+      <a href="citizens.html"   class="sidebar-link"><span class="icon">👥</span> Citizens</a>
+      <a href="departments.html" class="sidebar-link"><span class="icon">🏢</span> Departments</a>
+      <a href="hierarchy.html"  class="sidebar-link"><span class="icon">🏗️</span> Hierarchy</a>
+      <a href="officer-requests.html" class="sidebar-link active"><span class="icon">📩</span> Officer Requests <span class="badge" id="req-badge">4</span></a>
+    </nav>
+</aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Officer Requests</h1>
+        <span class="breadcrumb">Pending Registrations</span>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+        <div class="admin-profile" id="admin-profile" onclick="document.getElementById('profile-dropdown').classList.toggle('show')">
+          <div class="admin-avatar" id="admin-avatar">AD</div>
+          <div class="admin-info"><div class="name" id="admin-name">Admin User</div><div class="role">Administrator</div></div>
+          <div class="profile-dropdown" id="profile-dropdown">
+            <a href="profile.html">👤 My Profile</a>
+            <a href="../login.html" onclick="doLogout(event)">🚪 Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px;">
+        <div class="stat-card orange"><div class="stat-card-header"><div class="stat-card-icon orange">📩</div></div><div class="stat-value" id="pending-count">0</div><div class="stat-label">Pending Requests</div></div>
+        <div class="stat-card green"> <div class="stat-card-header"><div class="stat-card-icon green">✅</div></div> <div class="stat-value" id="accepted-count">0</div><div class="stat-label">Accepted</div></div>
+        <div class="stat-card red">   <div class="stat-card-header"><div class="stat-card-icon red">❌</div></div>   <div class="stat-value" id="rejected-count">0</div><div class="stat-label">Rejected</div></div>
+      </div>
+
+      <div id="requests-list"></div>
+
+      <div id="empty-state" class="hidden" style="text-align:center;padding:60px;color:var(--text-secondary);">
+        <div style="font-size:3rem;margin-bottom:16px;">📭</div>
+        <div style="font-size:1.1rem;font-weight:700;">No pending requests</div>
+        <div style="font-size:0.875rem;margin-top:6px;">All officer requests have been processed.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="demo-data.js"></script>
+<script src="theme.js"></script>
+<script src="admin-auth.js"></script>
+<script>
+  let requests = [...DEMO_OFFICER_REQUESTS];
+  let accepted = 0, rejected = 0;
+
+  function handleRequest(id, action) {
+    const r = requests.find(x => x.id === id);
+    if (!r) return;
+    r.status = action;
+    if (action === 'Accepted') accepted++; else rejected++;
+    renderRequests();
+  }
+
+  function renderRequests() {
+    const pending = requests.filter(r => r.status === 'Pending');
+    document.getElementById('pending-count').textContent  = pending.length;
+    document.getElementById('accepted-count').textContent = accepted;
+    document.getElementById('rejected-count').textContent = rejected;
+    document.getElementById('req-badge').textContent      = pending.length;
+
+    if (requests.length === 0) {
+      document.getElementById('requests-list').innerHTML = '';
+      document.getElementById('empty-state').classList.remove('hidden');
+      return;
+    }
+    document.getElementById('empty-state').classList.add('hidden');
+    document.getElementById('requests-list').innerHTML = requests.map(r => `
+      <div class="request-card" onclick="window.location.href='request-detail.html?id=${r.id}'" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+        <div style="display:flex;align-items:center;gap:16px;flex:1;">
+          <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--navy-mid));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:0.9rem;flex-shrink:0;">
+            ${r.name.split(' ').map(n=>n[0]).join('')}
+          </div>
+          <div>
+            <div style="font-weight:800;font-size:0.95rem;">${r.name}</div>
+            <div style="font-size:0.82rem;color:var(--text-secondary);margin-top:2px;">${r.designation} · ${r.department}</div>
+            <div style="font-size:0.78rem;color:var(--text-placeholder);margin-top:1px;">Applied: ${r.requestDate}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          ${r.status === 'Pending'
+            ? `<button class="btn btn-danger btn-sm"  onclick="event.stopPropagation();handleRequest('${r.id}','Rejected')">Reject</button>
+               <button class="btn btn-success btn-sm" onclick="event.stopPropagation();handleRequest('${r.id}','Accepted')">Accept</button>`
+            : `<span class="status-badge ${r.status === 'Accepted' ? 'resolved' : 'rejected'}">${r.status}</span>`}
+        </div>
+      </div>`).join('');
+  }
+
+  renderRequests();
+  document.addEventListener('click', e => {
+    if (!document.getElementById('admin-profile').contains(e.target))
+      document.getElementById('profile-dropdown').classList.remove('show');
+  });
+</script>
+</body>
+</html>

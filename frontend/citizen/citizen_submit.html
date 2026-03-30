@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CityFix — Submit Complaint</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="stylesheet" href="citizen.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    #leafletMap { height: 260px; border-radius: 10px; z-index: 0; }
+    .step-badge {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--navy); color: #fff;
+      font-size: 0.72rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    /* Anonymous toggle */
+    .anon-toggle {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px 16px; border-radius: 12px;
+      border: 1.5px solid var(--slate-200, #e2e8f0);
+      background: var(--slate-50, #f8fafc);
+      margin-top: 14px; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .anon-toggle:has(input:checked) {
+      border-color: var(--navy, #1a3c6e);
+      background: rgba(26,60,110,0.05);
+    }
+    .anon-toggle input[type="checkbox"] {
+      width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; cursor: pointer;
+      accent-color: var(--navy, #1a3c6e);
+    }
+    
+    .anon-toggle-title {
+      font-size: 0.875rem; font-weight: 700;
+      color: var(--slate-800, #1e293b); margin-bottom: 3px;
+    }
+    .anon-toggle-desc {
+      font-size: 0.78rem; color: var(--slate-500, #64748b); line-height: 1.5;
+    }
+    .anon-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 999px;
+      background: rgba(26,60,110,0.1); color: var(--navy, #1a3c6e);
+      font-size: 0.7rem; font-weight: 700; margin-top: 5px;
+    }
+  </style>
+  <script src="../admin/theme.js"></script>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="#" class="sidebar-logo">
+    <div class="logo-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+    </div>
+    <span class="logo-text">City<span>Fix</span></span>
+  </a>
+  <nav class="sidebar-nav">
+    <a href="citizen_dash.html"         class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+    <a href="citizen_submit.html"       class="sidebar-link active"><span class="icon">📋</span> New Complaint</a>
+    <a href="citizen_mycomplaints.html" class="sidebar-link"><span class="icon">📁</span> My Complaints</a>
+    <a href="citizen_track.html"        class="sidebar-link"><span class="icon">📍</span> Track Status</a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="header">
+    <div class="header-left">
+      <h1 class="page-title">Submit a Complaint</h1>
+      <span class="page-sub">Report civic issues — reviewed within 24 hours</span>
+    </div>
+    <div class="header-right">
+      <button class="notif-btn" onclick="toggleTheme()" title="Toggle dark mode" style="font-size:1rem;">
+        <span id="theme-icon">🌙</span>
+      </button>
+      <div style="position:relative;">
+        <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
+          <div class="chip-avatar">JD</div>
+          <div class="profile-btn-info">
+            <span class="profile-btn-name">Jane Doe</span>
+            <span class="profile-btn-role">Citizen</span>
+          </div>
+          <i class="fa-solid fa-chevron-down profile-chevron"></i>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown">
+          <div class="dropdown-user-header">
+            <div class="dropdown-user-row">
+              <div class="dropdown-user-avatar">JD</div>
+              <div>
+                <div class="dropdown-user-name">Jane Doe</div>
+                <div class="dropdown-user-email">jane@email.com</div>
+              </div>
+            </div>
+            <div class="dropdown-user-tags">
+              <span class="dropdown-user-tag">Citizen</span>
+            </div>
+          </div>
+          <div class="dropdown-items">
+            <a href="citizen_profile.html" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
+            <a href="citizen_dash.html" class="dropdown-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+            <div class="dropdown-divider"></div>
+            <a href="../login.html" class="dropdown-item logout-item">
+              <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="form-grid">
+
+      <!-- LEFT -->
+      <div class="col">
+
+        <!-- Category & Severity -->
+        <div class="card">
+          <div class="card-head">
+            <div class="step-badge">1</div>
+            <i class="fa-solid fa-tags card-icon"></i>
+            <h2>Category &amp; Severity</h2>
+          </div>
+          <label class="label">Complaint Category <span class="req">*</span></label>
+          <div class="select-wrap">
+            <select class="input" id="categorySelect">
+              <option value="">— Select a category —</option>
+            </select>
+            <i class="fa-solid fa-chevron-down arr"></i>
+          </div>
+          <label class="label" style="margin-top:16px;">Severity Level <span class="req">*</span></label>
+          <div class="sev-row">
+            <button class="sev low"           data-sev="low">     <i class="fa-solid fa-circle-check"></i> Low</button>
+            <button class="sev medium active" data-sev="medium">  <i class="fa-solid fa-circle-exclamation"></i> Medium</button>
+            <button class="sev high"          data-sev="high">    <i class="fa-solid fa-triangle-exclamation"></i> High</button>
+            <button class="sev critical"      data-sev="critical"><i class="fa-solid fa-radiation"></i> Critical</button>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="card">
+          <div class="card-head">
+            <div class="step-badge">2</div>
+            <i class="fa-solid fa-pen-nib card-icon"></i>
+            <h2>Description</h2>
+          </div>
+          <label class="label">Complaint Title <span class="req">*</span></label>
+          <input class="input" type="text" id="titleInput" placeholder="e.g. Large pothole on Main Street"/>
+          <label class="label" style="margin-top:14px;">Details <span class="req">*</span></label>
+          <div style="position:relative;">
+            <textarea class="input textarea" id="descBox" maxlength="600"
+              placeholder="Describe the issue clearly — location, impact, when noticed…"></textarea>
+            <span class="char-count"><span id="cc">0</span>/600</span>
+          </div>
+          <label class="label" style="margin-top:14px;">Attach Photos / Videos</label>
+          <input type="file" id="fileInput" accept="image/*,video/*" multiple style="display:none"/>
+          <div class="upload-box" id="uploadBox">
+            <i class="fa-solid fa-cloud-arrow-up" id="uploadIcon"></i>
+            <p id="uploadText">Drag &amp; drop or <span class="upload-link">browse files</span></p>
+            <small id="uploadSub">JPG, PNG, MP4 · Max 10 MB</small>
+            <div class="file-list" id="fileList"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT -->
+      <div class="col">
+
+        <!-- Location -->
+        <div class="card">
+          <div class="card-head">
+            <div class="step-badge">3</div>
+            <i class="fa-solid fa-location-dot card-icon"></i>
+            <h2>Incident Location</h2>
+          </div>
+
+          <button class="locate-btn" id="locateBtn">
+            <i class="fa-solid fa-crosshairs"></i> Use My Current Location
+          </button>
+
+          <div id="addressBar" style="display:none;align-items:center;gap:8px;padding:7px 12px;background:var(--navy-light);border-radius:8px;font-size:0.82rem;color:var(--navy);margin-bottom:10px;font-weight:600;">
+            <i class="fa-solid fa-location-dot"></i>
+            <span id="addressText"></span>
+          </div>
+
+          <div id="leafletMap"></div>
+          <p style="font-size:0.72rem;color:var(--light);text-align:center;margin-top:6px;">
+            <i class="fa-solid fa-hand-pointer"></i> Click map to pin location · Drag pin to adjust
+          </p>
+
+          <div class="field-row" style="margin-top:12px;">
+            <div style="flex:1">
+              <label class="label">Street Address</label>
+              <input class="input" id="addr" type="text" placeholder="Auto-filled from map"/>
+            </div>
+            <div style="width:110px">
+              <label class="label">Pincode</label>
+              <input class="input" id="pincode" type="text" placeholder="000000"/>
+            </div>
+          </div>
+          <div class="field-row" style="margin-top:10px;">
+            <div style="flex:1"><label class="label">City</label><input class="input" id="city" type="text" placeholder="City"/></div>
+            <div style="flex:1"><label class="label">District</label><input class="input" id="dist" type="text" placeholder="District"/></div>
+          </div>
+        </div>
+
+        <!-- Contact & Privacy -->
+        <div class="card">
+          <div class="card-head">
+            <div class="step-badge">4</div>
+            <i class="fa-solid fa-address-card card-icon"></i>
+            <h2>Contact Info</h2>
+          </div>
+          <div class="field-row">
+            <div style="flex:1">
+              <label class="label">Full Name <span class="req">*</span></label>
+              <input class="input" type="text" value="Jane Doe"/>
+            </div>
+            <div style="flex:1">
+              <label class="label">Mobile <span class="req">*</span></label>
+              <input class="input" type="tel" placeholder="+91 00000 00000"/>
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <label class="label">Email</label>
+            <input class="input" type="email" placeholder="you@example.com"/>
+          </div>
+
+          <!-- ── ANONYMOUS TOGGLE ───────────────────────── -->
+          <label class="anon-toggle" id="anonToggleLabel">
+            <input type="checkbox" id="anonCheckbox"/>
+            <div class="anon-toggle-body">
+              <div class="anon-toggle-title"><i class="fa-solid fa-user-secret" style="margin-right:6px;"></i>Submit Anonymously</div>
+              <div class="anon-toggle-desc">
+                Your phone number and email will be hidden from officers and departments.
+              </div>
+              <div class="anon-badge" id="anonBadge" style="display:none;">
+                <i class="fa-solid fa-shield-halved"></i> Identity Masked
+              </div>
+            </div>
+          </label>
+          <!-- ──────────────────────────────────────────── -->
+
+          <label class="check-row" style="margin-top:12px;">
+            <input type="checkbox" checked/> Notify me via SMS on status updates
+          </label>
+          <label class="check-row">
+            <input type="checkbox" checked/> I confirm this complaint is accurate
+          </label>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fabBtn">
+  <i class="fa-solid fa-paper-plane"></i>
+  <span>Submit Complaint</span>
+</button>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <i class="fa-solid fa-circle-check"></i>
+  <div>
+    <strong>Submitted!</strong>
+    <small id="toastId">ID: CMP-2026-109</small>
+  </div>
+</div>
+
+<script src="api.js"></script>
+<script src="citizen_submit.js"></script>
+<script>
+// Show/hide badge when anonymous is checked
+document.getElementById('anonCheckbox').addEventListener('change', function() {
+  document.getElementById('anonBadge').style.display = this.checked ? 'inline-flex' : 'none';
+});
+
+// Load departments from DB into category dropdown
+(async function() {
+  try {
+    const res   = await fetch('/api/departments');
+    const depts = await res.json();
+    const sel   = document.getElementById('categorySelect');
+    if (sel && Array.isArray(depts)) {
+      depts.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.name; opt.textContent = d.name;
+        sel.appendChild(opt);
+      });
+    }
+  } catch(e) { console.error('Failed to load departments', e); }
+})();
+</script>
+</body>
+</html>

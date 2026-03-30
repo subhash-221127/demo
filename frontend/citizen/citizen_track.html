@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CityFix — Track Status</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="stylesheet" href="citizen.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    /* Track-status specific */
+    .search-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .search-card-icon {
+      width: 56px; height: 56px;
+      background: var(--navy-light);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      color: var(--navy);
+      margin: 0 auto 14px;
+    }
+    .search-card h2 { font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; }
+    .search-card p  { font-size: 0.875rem; color: var(--muted); margin-bottom: 20px; }
+    .search-row {
+      display: flex;
+      gap: 10px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .search-row input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+      background: var(--bg);
+    }
+    .search-row input:focus { border-color: var(--navy); }
+    .track-btn {
+      padding: 12px 22px;
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: var(--transition);
+      white-space: nowrap;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .track-btn:hover { background: var(--navy-dark); }
+    .quick-ids { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 14px; align-items: center; }
+    .quick-ids span { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+    .quick-chip {
+      padding: 4px 12px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--navy);
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: monospace;
+    }
+    .quick-chip:hover { background: var(--navy-light); border-color: var(--navy); }
+
+    .error-msg {
+      background: var(--red-light);
+      border: 1.5px solid rgba(239,68,68,0.2);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      color: var(--red);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .summary-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--navy), var(--orange));
+    }
+    .summary-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .summary-id   { font-size: 0.72rem; font-weight: 700; color: var(--navy); font-family: monospace; display: block; margin-bottom: 4px; }
+    .summary-title{ font-size: 1.2rem; font-weight: 900; color: var(--text); }
+    .summary-cat  { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-light);
+    }
+    .sg-item { display: flex; flex-direction: column; gap: 4px; }
+    .sg-label { font-size: 0.72rem; font-weight: 700; color: var(--light); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 5px; }
+    .sg-val   { font-size: 0.875rem; font-weight: 700; color: var(--text); }
+
+    /* Officer card */
+    .officer-card {
+      background: var(--navy-light);
+      border: 1px solid rgba(26,60,110,0.15);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .officer-avatar {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--navy);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .officer-name  { font-weight: 800; font-size: 0.95rem; color: var(--navy); }
+    .officer-dept  { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .officer-ctas  { margin-left: auto; display: flex; gap: 8px; }
+
+    .timeline-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .timeline-title { font-size: 0.9rem; font-weight: 800; margin-bottom: 20px; }
+
+    /* ── Two-column result layout (60 left / 40 right) ── */
+    .result-cols {
+      display: grid;
+      grid-template-columns: 60fr 40fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .result-col-left  { display: flex; flex-direction: column; gap: 16px; }
+    .result-col-right { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Flipkart-style stepper ── */
+    .stepper-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .stepper-card h3 {
+      font-size: 0.9rem;
+      font-weight: 800;
+      margin-bottom: 24px;
+      color: var(--text);
+    }
+    .stepper {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+    }
+    .stepper-step {
+      display: flex;
+      gap: 14px;
+      position: relative;
+    }
+    .stepper-step:not(:last-child) .stepper-line {
+      position: absolute;
+      left: 16px;
+      top: 38px;
+      width: 3px;
+      bottom: -2px;
+      background: var(--border);
+      z-index: 0;
+      border-radius: 999px;
+    }
+    .stepper-step.done:not(:last-child) .stepper-line {
+      background: var(--green);
+      animation: growLine 0.5s ease forwards;
+    }
+    .stepper-step.active:not(:last-child) .stepper-line {
+      background: linear-gradient(to bottom, var(--green) 40%, var(--border) 100%);
+    }
+    @keyframes growLine {
+      from { transform: scaleY(0); transform-origin: top; }
+      to   { transform: scaleY(1); transform-origin: top; }
+    }
+
+    .stepper-dot {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.82rem;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+      border: 3px solid var(--border);
+      background: var(--surface);
+      transition: all 0.35s ease;
+    }
+    .stepper-step.done .stepper-dot {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+      box-shadow: 0 0 0 5px rgba(34,197,94,0.15);
+    }
+    .stepper-step.active .stepper-dot {
+      background: var(--orange);
+      border-color: var(--orange);
+      color: #fff;
+      box-shadow: 0 0 0 6px rgba(249,115,22,0.15);
+      animation: dotPulse 1.8s infinite;
+    }
+    .stepper-step.pending-step .stepper-dot {
+      background: var(--surface);
+      border-color: var(--border);
+      color: var(--placeholder);
+    }
+    @keyframes dotPulse {
+      0%,100% { box-shadow: 0 0 0 6px rgba(249,115,22,0.15); }
+      50%      { box-shadow: 0 0 0 10px rgba(249,115,22,0.05); }
+    }
+
+    .stepper-body {
+      flex: 1;
+      padding: 5px 0 22px;
+    }
+    .stepper-step:last-child .stepper-body { padding-bottom: 0; }
+
+    .stepper-title {
+      font-size: 0.9rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .stepper-step.pending-step .stepper-title { color: var(--placeholder); }
+    .stepper-step.active       .stepper-title { color: var(--orange); }
+    .stepper-step.done         .stepper-title { color: var(--text); }
+
+    .stepper-desc {
+      font-size: 0.77rem;
+      color: var(--muted);
+      margin-top: 3px;
+      line-height: 1.45;
+    }
+    .stepper-step.pending-step .stepper-desc { color: var(--placeholder); }
+
+    .stepper-date {
+      font-size: 0.71rem;
+      color: var(--light);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .stepper-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.71rem;
+      font-weight: 600;
+      color: var(--navy);
+      background: var(--navy-light);
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-top: 5px;
+    }
+
+    /* ── Notification prefs ── */
+    .notif-pref-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .notif-pref-card h4 { font-size: 0.875rem; font-weight: 800; margin-bottom: 14px; }
+    .notif-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+    .notif-toggle:last-child { border-bottom: none; }
+    .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { display: none; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--border);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-slider::after {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      top: 3px; left: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--navy); }
+    .toggle-switch input:checked + .toggle-slider::after { transform: translateX(18px); }
+
+    /* ── Rating box ── */
+    .rating-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+    }
+    .rating-card h4 { font-weight: 800; margin-bottom: 6px; }
+    .rating-card p  { font-size: 0.875rem; color: var(--muted); margin-bottom: 16px; }
+
+    @media(max-width:900px) {
+      .result-cols { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    @media(max-width:700px){ .summary-grid{ grid-template-columns: repeat(2,1fr); } }
+  </style>
+  <script src="../admin/theme.js"></script>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="#" class="sidebar-logo">
+    <div class="logo-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+    </div>
+    <span class="logo-text">City<span>Fix</span></span>
+  </a>
+  <nav class="sidebar-nav">
+    <a href="citizen_dash.html"         class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+    <a href="citizen_submit.html"       class="sidebar-link"><span class="icon">📋</span> New Complaint</a>
+    <a href="citizen_mycomplaints.html" class="sidebar-link"><span class="icon">📁</span> My Complaints</a>
+    <a href="citizen_track.html"        class="sidebar-link active"><span class="icon">📍</span> Track Status</a>
+  </nav>
+</aside>
+
+
+<!-- MAIN -->
+<div class="main">
+  <header class="header">
+    <div class="header-left">
+      <h1 class="page-title">Track Status</h1>
+      <span class="page-sub">Track your complaint in real time</span>
+    </div>
+    <div class="header-right">
+      <button class="notif-btn" onclick="toggleTheme()" title="Toggle dark mode" style="font-size:1rem;">
+        <span id="theme-icon">🌙</span>
+      </button>
+      <div style="position:relative;">
+        <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
+          <div class="chip-avatar">JD</div>
+          <div class="profile-btn-info">
+            <span class="profile-btn-name">Jane Doe</span>
+            <span class="profile-btn-role">Citizen</span>
+          </div>
+          <i class="fa-solid fa-chevron-down profile-chevron"></i>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown">
+          <div class="dropdown-user-header">
+            <div class="dropdown-user-row">
+              <div class="dropdown-user-avatar">JD</div>
+              <div>
+                <div class="dropdown-user-name">Jane Doe</div>
+                <div class="dropdown-user-email">jane@email.com</div>
+              </div>
+            </div>
+            <div class="dropdown-user-tags">
+              <span class="dropdown-user-tag">Citizen</span>
+            </div>
+          </div>
+          <div class="dropdown-items">
+            <a href="citizen_profile.html" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
+            <a href="citizen_dash.html" class="dropdown-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+            <div class="dropdown-divider"></div>
+            <a href="../login.html" class="dropdown-item logout-item">
+              <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- SEARCH CARD -->
+    <div class="search-card">
+      <div class="search-card-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+      <h2>Find Your Complaint</h2>
+      <p>Enter the complaint ID you received after submitting</p>
+      <div class="search-row">
+        <input type="text" id="trackInput" placeholder="e.g. CMP-2026-101" maxlength="20"/>
+        <button class="track-btn" id="trackBtn">
+          <i class="fa-solid fa-search"></i> Track
+        </button>
+      </div>
+      <div class="quick-ids">
+        <span>Try:</span>
+        <button class="quick-chip" data-id="CMP-2026-101">CMP-2026-101</button>
+        <button class="quick-chip" data-id="CMP-2026-102">CMP-2026-102</button>
+        <button class="quick-chip" data-id="CMP-2026-103">CMP-2026-103</button>
+        <button class="quick-chip" data-id="CMP-2026-107">CMP-2026-107</button>
+      </div>
+    </div>
+
+    <!-- ERROR -->
+    <div class="error-msg" id="errorMsg" style="display:none;">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span>No complaint found with this ID. Please check and try again.</span>
+    </div>
+
+    <!-- RESULT -->
+    <div id="resultSection" style="display:none;">
+
+      <!-- SUMMARY CARD (full width) -->
+      <div class="summary-card" id="summaryCard" style="margin-bottom:16px;">
+        <div class="summary-top">
+          <div>
+            <span class="summary-id" id="sId"></span>
+            <div class="summary-title" id="sTitle"></div>
+            <div class="summary-cat" id="sCat"></div>
+          </div>
+          <div id="sBadge"></div>
+        </div>
+        <div class="summary-grid">
+          <div class="sg-item"><span class="sg-label"><i class="fa-solid fa-tags"></i> Category</span><span class="sg-val" id="sCatVal"></span></div>
+          <div class="sg-item"><span class="sg-label"><i class="fa-solid fa-triangle-exclamation"></i> Severity</span><span class="sg-val" id="sSev"></span></div>
+          <div class="sg-item"><span class="sg-label"><i class="fa-solid fa-location-dot"></i> Location</span><span class="sg-val" id="sLoc"></span></div>
+          <div class="sg-item"><span class="sg-label"><i class="fa-solid fa-calendar"></i> Filed On</span><span class="sg-val" id="sDate"></span></div>
+          <div class="sg-item"><span class="sg-label"><i class="fa-solid fa-building"></i> Department</span><span class="sg-val" id="sDept"></span></div>
+        </div>
+      </div>
+
+      <!-- OFFICER CARD (full width, shown if assigned) -->
+      <div class="officer-card" id="officerCard" style="display:none;margin-bottom:16px;">
+        <div class="officer-avatar" id="officerInitials">?</div>
+        <div>
+          <div class="officer-name" id="officerName"></div>
+          <div class="officer-dept" id="officerDept"></div>
+          <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">
+            <a id="officerPhone" href="#" style="font-size:0.78rem;font-weight:600;color:var(--navy);text-decoration:none;display:none;align-items:center;gap:4px;"><i class="fa-solid fa-phone"></i> <span id="officerPhoneTxt"></span></a>
+            <a id="officerEmail" href="#" style="font-size:0.78rem;font-weight:600;color:var(--navy);text-decoration:none;display:none;align-items:center;gap:4px;"><i class="fa-solid fa-envelope"></i> <span id="officerEmailTxt"></span></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 60 / 40 TWO-COLUMN LAYOUT -->
+      <div class="result-cols">
+
+        <!-- LEFT 60% — Flipkart Stepper -->
+        <div class="result-col-left">
+          <div class="stepper-card">
+            <h3>📦 Complaint Progress</h3>
+            <div class="stepper" id="stepper"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT 40% — Notif prefs + Rating -->
+        <div class="result-col-right">
+
+          <!-- NOTIFICATION PREFS -->
+          <div class="notif-pref-card">
+            <h4>🔔 Notification Preferences</h4>
+            <div class="notif-toggle">
+              <span>SMS updates on status change</span>
+              <label class="toggle-switch"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+            </div>
+            <div class="notif-toggle">
+              <span>Email updates on status change</span>
+              <label class="toggle-switch"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+            </div>
+            <div class="notif-toggle">
+              <span>Notify when officer is assigned</span>
+              <label class="toggle-switch"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+            </div>
+            <div class="notif-toggle">
+              <span>Notify when resolution is uploaded</span>
+              <label class="toggle-switch"><input type="checkbox"/><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+
+          <!-- RATING (shown for resolved) -->
+          <div class="rating-card" id="ratingCard" style="display:none;">
+            <h4>⭐ Rate the Resolution</h4>
+            <p>Your feedback helps improve civic services</p>
+            <div class="stars" id="trackStars">
+              <span class="star" data-v="1" onclick="setTrackRating(1)">★</span>
+              <span class="star" data-v="2" onclick="setTrackRating(2)">★</span>
+              <span class="star" data-v="3" onclick="setTrackRating(3)">★</span>
+              <span class="star" data-v="4" onclick="setTrackRating(4)">★</span>
+              <span class="star" data-v="5" onclick="setTrackRating(5)">★</span>
+            </div>
+            <textarea class="input textarea" id="trackFeedback" placeholder="Share your experience (optional)…" style="margin-top:14px;min-height:70px;text-align:left;"></textarea>
+            <div style="margin-top:12px;">
+              <button class="btn btn-orange" onclick="submitTrackRating()"><i class="fa-solid fa-paper-plane"></i> Submit Feedback</button>
+            </div>
+          </div>
+
+        </div><!-- /right col -->
+      </div><!-- /result-cols -->
+
+    </div><!-- /resultSection -->
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <i class="fa-solid fa-circle-check"></i>
+  <div><strong id="toastMsg">Done!</strong><small id="toastSub"></small></div>
+</div>
+
+<!-- ✅ FIX: src script and inline script are now properly separated -->
+<script src="api.js"></script>
+<script src="citizen_track.js"></script>
+</body>
+</html>

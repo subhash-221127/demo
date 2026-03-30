@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix — View Complaint</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="citizen.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    /* ══════════════════════════════════════
+       LIQUID POUR TIMELINE
+    ══════════════════════════════════════ */
+
+    .flow-timeline {
+      position: relative;
+      padding: 8px 0 4px;
+    }
+
+    .flow-step {
+      display: flex;
+      gap: 20px;
+      position: relative;
+    }
+
+    /* ── Base pipe (grey track) ── */
+    .flow-step:not(:last-child) .flow-pipe {
+      position: absolute;
+      left: 19px;
+      top: 44px;
+      width: 4px;
+      bottom: 0;
+      background: var(--border);
+      border-radius: 999px;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    /* ── Liquid fill inside the pipe ── */
+    .flow-step:not(:last-child) .flow-liquid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 0%;
+      /* starts empty */
+      border-radius: 999px;
+      transition: height 0s;
+      /* JS controls timing */
+      background: linear-gradient(to bottom,
+          #16a34a 0%,
+          #22c55e 60%,
+          rgba(34, 197, 94, 0.4) 100%);
+    }
+
+    /* When JS fires scroll-trigger, we set --fill-h via inline style */
+    .flow-step.liquid-done .flow-liquid {
+      height: 100%;
+    }
+
+    .flow-step.liquid-active .flow-liquid {
+      height: 55%;
+      background: linear-gradient(to bottom,
+          #16a34a 0%,
+          #22c55e 55%,
+          rgba(34, 197, 94, 0.12) 100%);
+      animation: pourDrip 2.8s ease-in-out infinite;
+    }
+
+    @keyframes pourDrip {
+      0% {
+        height: 48%;
+      }
+
+      40% {
+        height: 62%;
+      }
+
+      70% {
+        height: 52%;
+      }
+
+      100% {
+        height: 48%;
+      }
+    }
+
+    /* ── Step circle dot ── */
+    .flow-dot {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 2;
+      border: 3px solid var(--border);
+      background: var(--surface);
+      transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+      /* starts invisible for entrance effect */
+      opacity: 0;
+      transform: scale(0.6);
+    }
+
+    /* Dot entrance animation — triggered by JS */
+    .flow-step.dot-visible .flow-dot {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .flow-step.dot-visible.liquid-done .flow-dot {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+      box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.18);
+    }
+
+    .flow-step.dot-visible.liquid-active .flow-dot {
+      background: var(--orange);
+      border-color: var(--orange);
+      color: #fff;
+      box-shadow: 0 0 0 6px rgba(249, 115, 22, 0.18);
+      animation: dotPulse 2s infinite;
+    }
+
+    .flow-step.dot-visible.pending-step .flow-dot {
+      background: var(--surface);
+      border-color: var(--border-light);
+      color: var(--placeholder);
+    }
+
+
+    /* Rejected step — red dot */
+    .flow-step.dot-visible.rejected-step .flow-dot {
+      background: #ef4444;
+      border-color: #ef4444;
+      color: #fff;
+      box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.18);
+    }
+    @keyframes dotPulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 6px rgba(249, 115, 22, 0.18);
+      }
+
+      50% {
+        box-shadow: 0 0 0 12px rgba(249, 115, 22, 0.05);
+      }
+    }
+
+    /* ── Step body text ── */
+    .flow-body {
+      flex: 1;
+      padding: 8px 0 32px;
+      /* starts slightly shifted down */
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+    }
+
+    .flow-step:last-child .flow-body {
+      padding-bottom: 0;
+    }
+
+    .flow-step.dot-visible .flow-body {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .flow-title {
+      font-size: 1rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .flow-step.liquid-done .flow-title {
+      color: var(--text);
+    }
+
+    .flow-step.liquid-active .flow-title {
+      color: var(--orange);
+    }
+
+    .flow-step.pending-step .flow-title {
+      color: var(--placeholder);
+    }
+
+    .flow-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .flow-step.pending-step .flow-desc {
+      color: var(--placeholder);
+    }
+
+    .flow-date {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      color: var(--light);
+      margin-top: 5px;
+    }
+
+    .flow-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--navy);
+      background: var(--navy-light);
+      padding: 3px 10px;
+      border-radius: 6px;
+      margin-top: 6px;
+    }
+
+    /* ── Drop animation on the liquid surface ── */
+    .flow-step.liquid-active .flow-pipe::after {
+      content: '';
+      position: absolute;
+      bottom: 45%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.55);
+      animation: droplet 1.4s ease-in infinite;
+    }
+
+    @keyframes droplet {
+      0% {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.3);
+        bottom: 65%;
+      }
+
+      40% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.4);
+        bottom: 40%;
+      }
+    }
+
+    /* ══════════════════════════════════════
+       REST OF PAGE STYLES
+    ══════════════════════════════════════ */
+    .detail-wrap {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--navy);
+      padding: 8px 0;
+      margin-bottom: 18px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: gap 0.15s;
+    }
+
+    .back-btn:hover {
+      gap: 10px;
+    }
+
+    .detail-hero {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .detail-hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--navy), var(--orange));
+    }
+
+    .hero-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .hero-id {
+      font-family: monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--navy);
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .hero-title {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .hero-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .hg-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .hg-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--light);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .hg-val {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .officer-strip {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--navy-light);
+      border: 1px solid rgba(26, 60, 110, 0.15);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+    }
+
+    .officer-av {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--navy);
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .officer-name {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--navy);
+    }
+
+    .officer-dept {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .officer-contacts {
+      display: flex;
+      gap: 14px;
+      margin-top: 5px;
+      flex-wrap: wrap;
+    }
+
+    .officer-contacts a {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--navy);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .officer-contacts a:hover {
+      text-decoration: underline;
+    }
+
+    .detail-cols {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .detail-col-left {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .detail-col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .info-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .info-section-title {
+      padding: 12px 18px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid var(--border-light);
+      background: var(--bg);
+    }
+
+    .info-section-body {
+      padding: 4px 18px;
+    }
+
+    .info-row-detail {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 0.875rem;
+    }
+
+    .info-row-detail:last-child {
+      border-bottom: none;
+    }
+
+    .info-row-detail .lbl {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .info-row-detail .val {
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .desc-box {
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-size: 0.875rem;
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    .comment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .comment-item {
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+    }
+
+    .comment-meta {
+      display: flex;
+      gap: 8px;
+      font-size: 0.72rem;
+      color: var(--light);
+      margin-bottom: 4px;
+    }
+
+    .comment-meta strong {
+      color: var(--muted);
+    }
+
+    .comment-text {
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .stars {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .star {
+      font-size: 1.6rem;
+      color: var(--border);
+      cursor: pointer;
+      transition: color 0.12s, transform 0.1s;
+    }
+
+    .star:hover,
+    .star.filled {
+      color: #f59e0b;
+    }
+
+    .star:hover {
+      transform: scale(1.2);
+    }
+
+    .action-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--navy-dark);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 200;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast i {
+      color: var(--green);
+    }
+
+    @media(max-width:900px) {
+      .detail-cols {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+  <script src="../admin/theme.js"></script>
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a href="#" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
+          stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="citizen_dash.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+      <a href="citizen_submit.html" class="sidebar-link"><span class="icon">📋</span> New Complaint</a>
+      <a href="citizen_mycomplaints.html" class="sidebar-link active"><span class="icon">📁</span> My Complaints</a>
+      <a href="citizen_track.html" class="sidebar-link"><span class="icon">📍</span> Track Status</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="header">
+      <div class="header-left">
+        <h1 class="page-title">Complaint Detail</h1>
+        <span class="page-sub" id="headerSub">Loading…</span>
+      </div>
+      <div class="header-right">
+        <button class="notif-btn" onclick="toggleTheme()" title="Toggle dark mode" style="font-size:1rem;">
+          <span id="theme-icon">🌙</span>
+        </button>
+        <div style="position:relative;">
+          <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
+            <div class="chip-avatar">JD</div>
+            <div class="profile-btn-info">
+              <span class="profile-btn-name">Jane Doe</span>
+              <span class="profile-btn-role">Citizen</span>
+            </div>
+            <i class="fa-solid fa-chevron-down profile-chevron"></i>
+          </button>
+          <div class="profile-dropdown" id="profileDropdown">
+            <div class="dropdown-user-header">
+              <div class="dropdown-user-row">
+                <div class="dropdown-user-avatar">JD</div>
+                <div>
+                  <div class="dropdown-user-name">Jane Doe</div>
+                  <div class="dropdown-user-email">jane@email.com</div>
+                </div>
+              </div>
+              <div class="dropdown-user-tags">
+                <span class="dropdown-user-tag">Citizen</span>
+              </div>
+            </div>
+            <div class="dropdown-items">
+              <a href="citizen_profile.html" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
+              <a href="citizen_dash.html" class="dropdown-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+              <div class="dropdown-divider"></div>
+              <a href="../login.html" class="dropdown-item logout-item">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="detail-wrap" id="detailWrap">
+        <!-- populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">
+    <i class="fa-solid fa-circle-check"></i>
+    <div><strong id="toastMsg">Done!</strong></div>
+  </div>
+
+  <script src="api.js"></script>
+  <script src="view_complaint.js"></script>
+</body>
+
+</html>

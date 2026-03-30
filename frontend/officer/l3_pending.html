@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CityFix – Director Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="officer.css"/>
+  <style>
+    /* ── L3 Review card styles ── */
+    .l3-card {
+      background: #fff;
+      border-radius: 18px;
+      border: 1.5px solid #e5e7eb;
+      margin-bottom: 20px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s;
+    }
+    .l3-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.09); }
+    .l3-card-header {
+      background: linear-gradient(135deg, #fef2f2, #fff7ed);
+      border-bottom: 1.5px solid #fecaca;
+      padding: 16px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .l3-card-header-left { flex: 1; }
+    .l3-complaint-id { font-size: 0.72rem; font-weight: 700; color: var(--slate-400); margin-bottom: 3px; }
+    .l3-complaint-title { font-size: 1rem; font-weight: 800; color: var(--navy); }
+    .l3-badge-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .badge-l3 {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 0.7rem; font-weight: 800; letter-spacing: 0.04em;
+      background: #fef2f2; color: #b91c1c; border: 1.5px solid #fecaca;
+    }
+    .l3-card-body { padding: 18px 22px; }
+    .l3-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .l3-info-label { font-size: 0.72rem; font-weight: 700; color: var(--slate-400); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+    .l3-info-val { font-size: 0.875rem; font-weight: 600; color: var(--navy); }
+    /* Officer strip */
+    .officer-strip {
+      background: var(--slate-50);
+      border: 1.5px solid var(--slate-200);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .officer-av {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #f97316, #dc2626);
+      color: #fff; font-weight: 800; font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .officer-label { font-size: 0.7rem; font-weight: 700; color: var(--slate-400); text-transform: uppercase; margin-bottom: 2px; }
+    .officer-name { font-size: 0.88rem; font-weight: 800; color: var(--navy); }
+    .officer-desig { font-size: 0.78rem; color: var(--slate-500); }
+    /* Chat section */
+    .chat-section {
+      background: var(--slate-50);
+      border: 1.5px solid var(--slate-200);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+    .chat-header {
+      background: var(--slate-100);
+      padding: 10px 16px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--slate-600);
+      border-bottom: 1px solid var(--slate-200);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chat-messages {
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chat-msg { padding: 8px 12px; border-radius: 10px; font-size: 0.83rem; line-height: 1.5; }
+    .chat-msg.from-officer { background: #eff6ff; color: #1e40af; border-left: 3px solid #3b82f6; }
+    .chat-msg.from-l3      { background: #fef2f2; color: #991b1b; border-left: 3px solid #ef4444; }
+    .chat-msg-meta { font-size: 0.7rem; color: var(--slate-400); margin-bottom: 3px; font-weight: 700; }
+    .chat-input-row {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--slate-200);
+      background: #fff;
+    }
+    .chat-input-row input {
+      flex: 1;
+      padding: 9px 13px;
+      border: 1.5px solid var(--slate-200);
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 0.83rem;
+      outline: none;
+      background: var(--slate-50);
+    }
+    .chat-input-row input:focus { border-color: var(--navy); background: #fff; }
+    .chat-send-btn {
+      padding: 9px 14px;
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    /* Action panel */
+    .l3-actions {
+      border-top: 1.5px solid var(--slate-200);
+      padding: 16px 22px;
+      background: var(--slate-50);
+    }
+    .l3-actions-title { font-size: 0.78rem; font-weight: 800; color: var(--slate-500); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 12px; }
+    .l3-action-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-l3-close {
+      flex: 1; min-width: 140px;
+      padding: 10px 18px;
+      background: #f0fdf4;
+      color: #15803d;
+      border: 1.5px solid #bbf7d0;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.875rem;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .btn-l3-close:hover { background:#dcfce7; border-color:#4ade80; }
+    .btn-l3-reassign {
+      flex: 1; min-width: 140px;
+      padding: 10px 18px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.875rem;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .btn-l3-reassign:hover { background:#dbeafe; border-color:#60a5fa; }
+    .close-form {
+      display: none;
+      margin-top: 14px;
+      padding: 14px;
+      background: #f0fdf4;
+      border: 1.5px solid #bbf7d0;
+      border-radius: 12px;
+    }
+    .reassign-form {
+      display: none;
+      margin-top: 14px;
+      padding: 14px;
+      background: #eff6ff;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 12px;
+    }
+    .form-label { font-size: 0.75rem; font-weight: 700; color: var(--slate-500); display: block; margin-bottom: 6px; }
+    .form-textarea, .form-select {
+      width: 100%;
+      padding: 9px 13px;
+      border: 1.5px solid var(--slate-200);
+      border-radius: 9px;
+      font-family: var(--font);
+      font-size: 0.85rem;
+      outline: none;
+      box-sizing: border-box;
+      background: #fff;
+    }
+    .form-textarea:focus, .form-select:focus { border-color: var(--navy); }
+    .l3-submit-btn {
+      margin-top: 10px;
+      padding: 9px 20px;
+      border: none;
+      border-radius: 9px;
+      font-weight: 800;
+      font-size: 0.875rem;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    .l3-submit-btn.green  { background: #16a34a; color: #fff; }
+    .l3-submit-btn.green:hover  { background: #15803d; }
+    .l3-submit-btn.blue   { background: #2563eb; color: #fff; }
+    .l3-submit-btn.blue:hover   { background: #1d4ed8; }
+    .page-banner {
+      background: linear-gradient(135deg, #fef2f2, #fff7ed);
+      border: 1.5px solid #fecaca;
+      border-radius: 16px;
+      padding: 18px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .page-banner-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, #dc2626, #991b1b);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 1.2rem; flex-shrink: 0;
+    }
+    .page-banner h2 { font-size: 1rem; font-weight: 800; color: #991b1b; margin: 0 0 2px; }
+    .page-banner p  { font-size: 0.8rem; color: #b91c1c; margin: 0; }
+    [data-theme="dark"] .l3-card               { background: var(--card-bg); border-color: var(--slate-700); }
+    [data-theme="dark"] .l3-card-header        { background: linear-gradient(135deg,#450a0a,#431407); border-color:#7f1d1d; }
+    [data-theme="dark"] .officer-strip         { background:var(--slate-800);border-color:var(--slate-700); }
+    [data-theme="dark"] .chat-section          { background:var(--slate-800);border-color:var(--slate-700); }
+    [data-theme="dark"] .chat-header           { background:var(--slate-900); }
+    [data-theme="dark"] .chat-input-row        { background:var(--slate-900); }
+    [data-theme="dark"] .l3-actions            { background:var(--slate-900);border-color:var(--slate-700); }
+    [data-theme="dark"] .page-banner           { background:linear-gradient(135deg,#450a0a,#431407);border-color:#7f1d1d; }
+    [data-theme="dark"] .page-banner h2        { color:#fca5a5; }
+    [data-theme="dark"] .page-banner p         { color:#f87171; }
+    [data-theme="dark"] .close-form            { background:#052e16;border-color:#166534; }
+    [data-theme="dark"] .reassign-form         { background:#1e3a5f;border-color:#1e40af; }
+    [data-theme="dark"] .form-textarea,
+    [data-theme="dark"] .form-select           { background:var(--slate-800);color:var(--slate-100);border-color:var(--slate-600); }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="../index.html" class="sidebar-logo">
+    <div class="logo-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+    </div>
+    <span class="logo-text">City<span>Fix</span></span>
+  </a>
+  <nav class="sidebar-nav">
+    <a href="complaints.html"   class="sidebar-link"><span class="icon">📋</span> My Complaints</a>
+    <a href="escalated.html"    class="sidebar-link"><span class="icon">🔺</span> Escalated</a>
+    <a href="l3_pending.html"   class="sidebar-link active"><span class="icon">🔍</span> Director Review</a>
+    <a href="profile.html"      class="sidebar-link"><span class="icon">👤</span> My Profile</a>
+  </nav>
+</aside>
+
+<div class="main">
+  <header class="header">
+    <div class="header-left">
+      <h1 class="page-title">Director Review Panel</h1>
+      <span class="page-sub" id="topbar-sub">Loading…</span>
+    </div>
+    <div class="header-right">
+      <button class="notif-btn" id="dark-toggle-btn" onclick="toggleL3Theme()" title="Toggle dark mode" style="font-size:1rem;margin-right:4px;">
+        <span id="dark-toggle-icon">🌙</span>
+      </button>
+      <div style="position:relative;">
+        <button class="profile-btn" id="user-btn" onclick="toggleUserMenu(event)">
+          <div class="chip-avatar" id="avatar-initials">OF</div>
+          <div class="profile-btn-info">
+            <span class="profile-btn-name" id="topbar-username">Officer</span>
+            <span class="profile-btn-role">Level 3 Director</span>
+          </div>
+          <i class="fa-solid fa-chevron-down profile-chevron"></i>
+        </button>
+        <div class="profile-dropdown" id="user-dropdown">
+          <div class="dropdown-user-header">
+            <div class="dropdown-user-row">
+              <div class="dropdown-user-avatar" id="dropdown-initials">OF</div>
+              <div>
+                <div class="dropdown-user-name" id="dropdown-name">Officer</div>
+                <div class="dropdown-user-email" id="dropdown-email">—</div>
+              </div>
+            </div>
+            <div class="dropdown-user-tags">
+              <span class="dropdown-user-tag tag-role">Director</span>
+              <span class="dropdown-user-tag tag-dept" id="dropdown-dept">—</span>
+            </div>
+          </div>
+          <div class="dropdown-items">
+            <a href="profile.html" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item logout-item" onclick="handleLogout()">
+              <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-content">
+    <div class="page-banner">
+      <div class="page-banner-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+      <div>
+        <h2>🔍 Director Review Queue</h2>
+        <p>These complaints have exceeded both L1 and L2 SLAs. As Director, you can chat with the handling officer, close the case with an explanation, or reassign it.</p>
+      </div>
+    </div>
+
+    <!-- Mini Stats -->
+    <div class="mini-stats">
+      <div class="mini-stat" style="background:#fef2f2;border-color:rgba(239,68,68,0.2);">
+        <div class="mini-stat-val" id="l3-stat-total" style="color:#dc2626;">0</div>
+        <div class="mini-stat-label">Pending Review</div>
+      </div>
+      <div class="mini-stat" style="background:#fff7ed;border-color:rgba(249,115,22,0.2);">
+        <div class="mini-stat-val" id="l3-stat-critical" style="color:#c2410c;">0</div>
+        <div class="mini-stat-label">Critical Cases</div>
+      </div>
+      <div class="mini-stat" style="background:#eff6ff;border-color:rgba(59,130,246,0.2);">
+        <div class="mini-stat-val" id="l3-stat-depts" style="color:#1d4ed8;">0</div>
+        <div class="mini-stat-label">Departments</div>
+      </div>
+    </div>
+
+    <div id="l3-loading" style="text-align:center;padding:50px;color:var(--slate-400);">
+      <i class="fa-solid fa-spinner fa-spin" style="font-size:1.6rem;"></i>
+      <p style="margin-top:12px;font-size:0.88rem;">Loading director review queue…</p>
+    </div>
+    <div id="l3-error" style="display:none;text-align:center;padding:60px 20px;color:var(--red);">
+      <i class="fa-solid fa-circle-exclamation" style="font-size:2rem;margin-bottom:12px;display:block;"></i>
+      <span id="l3-error-msg">Could not load review queue.</span>
+    </div>
+    <div id="l3-empty" style="display:none;text-align:center;padding:60px 20px;">
+      <i class="fa-solid fa-circle-check" style="font-size:2.5rem;color:#22c55e;margin-bottom:12px;display:block;"></i>
+      <h3 style="font-size:1rem;font-weight:800;color:var(--navy);margin-bottom:6px;">Review Queue Clear!</h3>
+      <p style="font-size:0.85rem;color:var(--slate-500);">No complaints have been double-escalated. Excellent department performance!</p>
+    </div>
+    <div id="l3-list"></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+<script src="officer.js"></script>
+<script>
+  (function() {
+    const saved = localStorage.getItem('cityfix-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.addEventListener('DOMContentLoaded', () => {
+      const icon = document.getElementById('dark-toggle-icon');
+      if (icon) icon.textContent = saved === 'dark' ? '☀️' : '🌙';
+    });
+  })();
+
+  function toggleL3Theme() {
+    const cur  = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('cityfix-theme', next);
+    const icon = document.getElementById('dark-toggle-icon');
+    if (icon) icon.textContent = next === 'dark' ? '☀️' : '🌙';
+  }
+
+  let allL3Cases = [];
+  let allDeptOfficers = [];
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+  function sevBadge(s) {
+    const cls = { critical:'badge-critical', high:'badge-high', medium:'badge-medium', low:'badge-low' };
+    const lbl = s ? s.charAt(0).toUpperCase()+s.slice(1) : s;
+    return `<span class="badge ${cls[s]||'badge-medium'}">${lbl}</span>`;
+  }
+  function officerInitials(name) {
+    return name ? name.split(' ').filter(Boolean).map(w=>w[0]).join('').toUpperCase().slice(0,2) : 'OF';
+  }
+
+  function buildCommentsHTML(comments, mongoId) {
+    const msgs = (comments || []).filter(c => c.role === 'level3' || c.role === 'officer');
+    const msgsHTML = msgs.length
+      ? msgs.map(m => `
+          <div class="chat-msg ${m.role === 'level3' ? 'from-l3' : 'from-officer'}">
+            <div class="chat-msg-meta">
+              ${m.role === 'level3' ? '🔴 Director' : '🔵 Officer'} · ${m.author || '—'} 
+              · ${m.createdAt ? new Date(m.createdAt).toLocaleString('en-IN', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : ''}
+            </div>
+            <div>${m.text}</div>
+          </div>`).join('')
+      : '<p style="font-size:0.78rem;color:var(--slate-400);text-align:center;padding:12px 0;">No messages yet. Send a message to the handling officer.</p>';
+
+    return `
+      <div class="chat-section">
+        <div class="chat-header"><i class="fa-solid fa-comments"></i> Communication with L2 Officer</div>
+        <div class="chat-messages" id="chat-${mongoId}">${msgsHTML}</div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-input-${mongoId}" placeholder="Message the handling officer…"
+            onkeydown="if(event.key==='Enter') sendL3Chat('${mongoId}')" />
+          <button class="chat-send-btn" onclick="sendL3Chat('${mongoId}')"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+      </div>`;
+  }
+
+  function renderL3Cases(list) {
+    const container = document.getElementById('l3-list');
+    if (!list.length) {
+      document.getElementById('l3-empty').style.display = 'block';
+      container.innerHTML = '';
+      return;
+    }
+    document.getElementById('l3-empty').style.display = 'none';
+
+    container.innerHTML = list.map((c, idx) => {
+      const l2 = c.level2OfficerId && typeof c.level2OfficerId === 'object' ? c.level2OfficerId : null;
+      const l1 = c.officerId && typeof c.officerId === 'object' ? c.officerId : null;
+      const l2Name = l2 ? l2.name : 'L2 Officer';
+      const l2Desig = l2 ? (l2.designation || 'Senior Officer') : '—';
+      const l1Name = l1 ? l1.name : 'L1 Officer';
+      const l1Desig = l1 ? (l1.designation || 'Field Officer') : '—';
+
+      // Officers for reassign dropdown (filtered by same dept, already loaded)
+      const officerOptions = allDeptOfficers
+        .filter(o => o.level === 1 || o.level === 2)
+        .map(o => `<option value="${o._id}">${o.name} (${o.designation}) — L${o.level}</option>`)
+        .join('');
+
+      return `
+        <div class="l3-card" id="l3card-${c._id}">
+          <!-- Header -->
+          <div class="l3-card-header">
+            <div class="l3-card-header-left">
+              <div class="l3-complaint-id">${c.complaintId || c._id}</div>
+              <div class="l3-complaint-title">${c.title || 'Untitled'}</div>
+              <div class="l3-badge-row">
+                <span class="badge-l3"><i class="fa-solid fa-triangle-exclamation"></i> L3 Escalation</span>
+                ${sevBadge(c.severity)}
+                <span class="badge badge-pending"><i class="fa-solid fa-clock"></i> ${c.status === 'in_progress' ? 'In Progress' : 'Assigned'}</span>
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;font-size:0.75rem;color:var(--slate-400);">
+              <div style="margin-bottom:4px;">Escalated to L3</div>
+              <div style="font-weight:800;color:#dc2626;">${fmtDate(c.escalatedToL3At)}</div>
+              <div style="margin-top:4px;">${c.department || '—'}</div>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="l3-card-body">
+            <!-- Info grid -->
+            <div class="l3-info-grid">
+              <div class="l3-info-item">
+                <div class="l3-info-label"><i class="fa-solid fa-location-dot"></i> Location</div>
+                <div class="l3-info-val">${c.location?.address || c.location || '—'}</div>
+              </div>
+              <div class="l3-info-item">
+                <div class="l3-info-label"><i class="fa-regular fa-calendar"></i> Filed On</div>
+                <div class="l3-info-val">${c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—'}</div>
+              </div>
+              <div class="l3-info-item">
+                <div class="l3-info-label">⏱️ L1 Assigned</div>
+                <div class="l3-info-val">${c.assignedAt ? fmtDate(c.assignedAt) : '—'}</div>
+              </div>
+              <div class="l3-info-item">
+                <div class="l3-info-label">🔺 Escalated to L2</div>
+                <div class="l3-info-val">${c.escalatedAt ? fmtDate(c.escalatedAt) : '—'}</div>
+              </div>
+            </div>
+
+            ${c.description ? `<div style="background:var(--slate-50);border:1px solid var(--slate-200);border-radius:10px;padding:12px 14px;font-size:0.83rem;color:var(--slate-600);line-height:1.6;margin-bottom:14px;">${c.description.substring(0,200)}${c.description.length>200?'…':''}</div>` : ''}
+
+            <!-- L1 Officer -->
+            <div class="l3-info-label" style="margin-bottom:8px;"><i class="fa-solid fa-user"></i> Original L1 Officer</div>
+            <div class="officer-strip" style="margin-bottom:10px;">
+              <div class="officer-av" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">${officerInitials(l1Name)}</div>
+              <div>
+                <div class="officer-label">Level 1 — Field Officer</div>
+                <div class="officer-name">${l1Name}</div>
+                <div class="officer-desig">${l1Desig}</div>
+              </div>
+            </div>
+
+            <!-- L2 Officer -->
+            <div class="l3-info-label" style="margin-bottom:8px;"><i class="fa-solid fa-user-tie"></i> Level 2 — Current Handler</div>
+            <div class="officer-strip">
+              <div class="officer-av">${officerInitials(l2Name)}</div>
+              <div>
+                <div class="officer-label">Level 2 — Senior Officer</div>
+                <div class="officer-name">${l2Name}</div>
+                <div class="officer-desig">${l2Desig}</div>
+              </div>
+            </div>
+
+            <!-- Chat with L2 -->
+            ${buildCommentsHTML(c.comments, c._id)}
+          </div>
+
+          <!-- Action Panel -->
+          <div class="l3-actions">
+            <div class="l3-actions-title"><i class="fa-solid fa-bolt"></i> Director Actions</div>
+            <div class="l3-action-btns">
+              <button class="btn-l3-close" onclick="toggleCloseForm('${c._id}')">
+                <i class="fa-solid fa-circle-check"></i> Close Case
+              </button>
+              <button class="btn-l3-reassign" onclick="toggleReassignForm('${c._id}')">
+                <i class="fa-solid fa-rotate"></i> Reassign Complaint
+              </button>
+            </div>
+
+            <!-- Close Form -->
+            <div class="close-form" id="close-form-${c._id}">
+              <label class="form-label">Closure Explanation <span style="color:var(--red);">*</span></label>
+              <textarea class="form-textarea" id="close-note-${c._id}" rows="3"
+                placeholder="Provide a detailed explanation for closing this case. This will be sent to the citizen…"></textarea>
+              <button class="l3-submit-btn green" onclick="submitL3Close('${c._id}')">
+                <i class="fa-solid fa-circle-check"></i> Confirm & Close Case
+              </button>
+            </div>
+
+            <!-- Reassign Form -->
+            <div class="reassign-form" id="reassign-form-${c._id}">
+              <label class="form-label">Select Officer to Reassign To <span style="color:var(--red);">*</span></label>
+              ${officerOptions
+                ? `<select class="form-select" id="reassign-officer-${c._id}"><option value="">— Choose Officer —</option>${officerOptions}</select>`
+                : `<p style="font-size:0.8rem;color:var(--slate-500);">No other officers found in this department.</p>`
+              }
+              <label class="form-label" style="margin-top:10px;">Reason / Note</label>
+              <textarea class="form-textarea" id="reassign-note-${c._id}" rows="2"
+                placeholder="Reason for reassignment (optional)…"></textarea>
+              <button class="l3-submit-btn blue" onclick="submitL3Reassign('${c._id}')">
+                <i class="fa-solid fa-rotate"></i> Confirm Reassign
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function toggleCloseForm(id) {
+    const f = document.getElementById('close-form-' + id);
+    const r = document.getElementById('reassign-form-' + id);
+    if (r) r.style.display = 'none';
+    if (f) f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  }
+  function toggleReassignForm(id) {
+    const f = document.getElementById('reassign-form-' + id);
+    const c = document.getElementById('close-form-' + id);
+    if (c) c.style.display = 'none';
+    if (f) f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function sendL3Chat(mongoId) {
+    const input  = document.getElementById('chat-input-' + mongoId);
+    if (!input || !input.value.trim()) return;
+    const text   = input.value.trim();
+    const author = SESSION.name || 'Director';
+    input.disabled = true;
+
+    try {
+      const resp = await fetch(`${BASE_URL}/api/complaint/${mongoId}/l3-chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author, text }),
+      });
+      if (!resp.ok) throw new Error();
+      input.value = '';
+      const chatEl = document.getElementById('chat-' + mongoId);
+      if (chatEl) {
+        const p = chatEl.querySelector('p');
+        if (p) p.remove();
+        const now = new Date().toLocaleString('en-IN', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+        const div = document.createElement('div');
+        div.className = 'chat-msg from-l3';
+        div.innerHTML = `<div class="chat-msg-meta">🔴 Director · ${author} · ${now}</div><div>${text}</div>`;
+        chatEl.appendChild(div);
+        chatEl.scrollTop = chatEl.scrollHeight;
+      }
+      showToast('Message sent to officer.', 'success');
+    } catch {
+      showToast('Failed to send message.', 'error');
+    } finally {
+      input.disabled = false;
+      input.focus();
+    }
+  }
+
+  async function submitL3Close(mongoId) {
+    const note = document.getElementById('close-note-' + mongoId)?.value.trim();
+    if (!note) { showToast('Please provide a closure explanation.', 'error'); return; }
+
+    try {
+      const resp = await fetch(`${BASE_URL}/api/complaint/${mongoId}/l3-action`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'close', note }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.message || 'Error');
+      showToast('✅ Case closed. Citizen notified via email.', 'success');
+      // Remove card
+      const card = document.getElementById('l3card-' + mongoId);
+      if (card) { card.style.opacity = '0'; card.style.transition = 'opacity 0.4s'; setTimeout(() => card.remove(), 400); }
+      allL3Cases = allL3Cases.filter(c => c._id !== mongoId);
+      updateL3Stats();
+    } catch (err) {
+      showToast(err.message || 'Failed to close case.', 'error');
+    }
+  }
+
+  async function submitL3Reassign(mongoId) {
+    const newOfficerId = document.getElementById('reassign-officer-' + mongoId)?.value;
+    const note = document.getElementById('reassign-note-' + mongoId)?.value.trim();
+    if (!newOfficerId) { showToast('Please select an officer to reassign to.', 'error'); return; }
+
+    try {
+      const resp = await fetch(`${BASE_URL}/api/complaint/${mongoId}/l3-action`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reassign', note, newOfficerId }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.message || 'Error');
+      showToast('↩️ Complaint reassigned successfully.', 'success');
+      const card = document.getElementById('l3card-' + mongoId);
+      if (card) { card.style.opacity = '0'; card.style.transition = 'opacity 0.4s'; setTimeout(() => card.remove(), 400); }
+      allL3Cases = allL3Cases.filter(c => c._id !== mongoId);
+      updateL3Stats();
+    } catch (err) {
+      showToast(err.message || 'Failed to reassign.', 'error');
+    }
+  }
+
+  function updateL3Stats() {
+    document.getElementById('l3-stat-total').textContent    = allL3Cases.length;
+    document.getElementById('l3-stat-critical').textContent = allL3Cases.filter(c => c.severity === 'critical').length;
+    const depts = new Set(allL3Cases.map(c => c.department));
+    document.getElementById('l3-stat-depts').textContent = depts.size;
+    if (!allL3Cases.length) document.getElementById('l3-empty').style.display = 'block';
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    populateTopbar();
+
+    const officerMongoId = SESSION.id || SESSION._id;
+    if (!officerMongoId) {
+      document.getElementById('l3-loading').style.display = 'none';
+      document.getElementById('l3-error').style.display = 'block';
+      return;
+    }
+
+    try {
+      // Fetch L3 pending complaints
+      const resp = await fetch(`${BASE_URL}/api/complaints/escalated/level3?officerId=${officerMongoId}`);
+      if (!resp.ok) throw new Error('Failed to fetch');
+      allL3Cases = await resp.json();
+
+      // Fetch dept officers for reassign dropdown
+      if (allL3Cases.length > 0) {
+        const dept = allL3Cases[0].department;
+        const deptResp = await fetch(`${BASE_URL}/api/officers/by-department/${encodeURIComponent(dept)}`);
+        if (deptResp.ok) allDeptOfficers = await deptResp.json();
+      }
+
+      document.getElementById('l3-loading').style.display = 'none';
+      const topSub = document.getElementById('topbar-sub');
+      if (topSub) topSub.textContent = `${allL3Cases.length} case${allL3Cases.length !== 1 ? 's' : ''} requiring director review`;
+
+      updateL3Stats();
+      renderL3Cases(allL3Cases);
+
+    } catch (err) {
+      document.getElementById('l3-loading').style.display = 'none';
+      document.getElementById('l3-error').style.display = 'block';
+      document.getElementById('l3-error-msg').textContent = 'Could not connect to server.';
+    }
+  });
+</script>
+</body>
+</html>

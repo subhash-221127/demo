@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix – My Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="citizen.css" />
+  <script src="../admin/theme.js"></script>
+  <style>
+    .profile-hero {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .profile-banner {
+      height: 80px;
+      background: linear-gradient(135deg, #0f2346, #1a3c6e 60%, #f97316);
+    }
+    .profile-hero-body {
+      padding: 0 28px 24px;
+      display: flex; align-items: flex-end; gap: 18px;
+    }
+    .profile-big-avatar {
+      width: 76px; height: 76px; border-radius: 50%;
+      background: linear-gradient(135deg, #1a3c6e, #2563eb);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; font-weight: 800;
+      border: 4px solid var(--surface);
+      margin-top: -38px; flex-shrink: 0;
+      box-shadow: 0 6px 20px rgba(26,60,110,0.25);
+    }
+    .profile-hero-info { padding-top: 10px; flex: 1; }
+    .profile-hero-info h2 { font-size: 1.3rem; font-weight: 900; color: var(--text); margin-bottom: 3px; }
+    .profile-hero-info .sub { font-size: 0.85rem; color: var(--muted); }
+
+    .profile-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 16px; margin-bottom: 20px;
+    }
+    .profile-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px 24px;
+    }
+    .profile-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    }
+    .profile-card h4 {
+      font-size: 0.78rem; font-weight: 800; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em; margin: 0;
+    }
+    .profile-row {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 10px 0;
+      border-bottom: 1px solid var(--border-light); font-size: 0.9rem;
+    }
+    .profile-row:last-child { border-bottom: none; }
+    .profile-row .lbl { color: var(--muted); font-weight: 500; }
+    .profile-row .val { font-weight: 700; color: var(--text); text-align: right; max-width: 60%; word-break: break-all; }
+
+    .profile-stats { display: flex; gap: 12px; margin-bottom: 20px; }
+    .profile-stat {
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px; text-align: center;
+    }
+    .profile-stat .ps-val { font-size: 1.7rem; font-weight: 900; color: var(--text); line-height: 1; }
+    .profile-stat .ps-lbl { font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-top: 5px; }
+    .profile-stat.blue  .ps-val { color: var(--blue); }
+    .profile-stat.amber .ps-val { color: var(--amber); }
+    .profile-stat.green .ps-val { color: var(--green); }
+
+    /* Collapsible edit / password card */
+    .edit-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; margin-bottom: 16px;
+    }
+    .edit-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 22px; cursor: pointer; user-select: none;
+      border-bottom: 1px solid transparent; transition: border-color 0.2s;
+    }
+    .edit-card-header.open { border-bottom-color: var(--border); }
+    .edit-card-header h4 {
+      font-size: 0.78rem; font-weight: 800; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em; margin: 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .edit-card-chevron { color: var(--muted); font-size: 0.8rem; transition: transform 0.2s; }
+    .edit-card-chevron.open { transform: rotate(180deg); }
+
+    .edit-card-body { display: none; padding: 20px 22px; }
+    .edit-card-body.open { display: block; }
+
+    .edit-field { margin-bottom: 14px; }
+    .edit-field label {
+      display: block; font-size: 0.8rem; font-weight: 700;
+      color: var(--muted); margin-bottom: 5px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .edit-field input {
+      width: 100%; padding: 10px 14px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      background: var(--bg); color: var(--text);
+      font-size: 0.9rem; font-family: var(--font);
+      outline: none; box-sizing: border-box; transition: var(--transition);
+    }
+    .edit-field input:focus { border-color: var(--navy); }
+    .edit-field input:disabled { opacity: 0.5; cursor: not-allowed; background: var(--surface); }
+    .edit-actions { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; }
+
+    .danger-card {
+      background: #fff1f2; border: 1.5px solid #fda4af;
+      border-radius: var(--radius); padding: 18px 22px;
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    }
+    .danger-card h4 { color: #be123c; font-size: 0.9rem; margin-bottom: 3px; }
+    .danger-card p  { font-size: 0.82rem; color: var(--muted); margin: 0; }
+
+    .pw-field { position: relative; }
+    .pw-field input { padding-right: 42px; }
+    .pw-toggle {
+      position: absolute; right: 12px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 0.95rem; padding: 0;
+    }
+    .pw-toggle:hover { color: var(--text); }
+    .pw-strength {
+      margin-top: 5px; height: 4px;
+      border-radius: 99px; background: var(--border);
+      overflow: hidden;
+    }
+    .pw-strength-bar { height: 100%; border-radius: 99px; transition: width 0.3s, background 0.3s; }
+    .pw-hint { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+    .msg-inline {
+      font-size: 0.82rem; font-weight: 600; padding: 8px 12px;
+      border-radius: 8px; margin-bottom: 12px; display: none;
+    }
+    .msg-inline.success { background: #f0fdf4; color: #16a34a; }
+    .msg-inline.error   { background: #fef2f2; color: #dc2626; }
+
+    @media (max-width: 700px) {
+      .profile-grid  { grid-template-columns: 1fr; }
+      .profile-stats { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a href="citizen_dash.html" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="citizen_dash.html"         class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+      <a href="citizen_submit.html"       class="sidebar-link"><span class="icon">📋</span> New Complaint</a>
+      <a href="citizen_mycomplaints.html" class="sidebar-link"><span class="icon">📁</span> My Complaints</a>
+      <a href="citizen_track.html"        class="sidebar-link"><span class="icon">📍</span> Track Status</a>
+      <a href="citizen_profile.html"      class="sidebar-link active"><span class="icon">👤</span> My Profile</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <header class="header">
+      <div class="header-left">
+        <h1 class="page-title">My Profile</h1>
+        <span class="page-sub">View and update your account</span>
+      </div>
+      <div class="header-right">
+        <button class="notif-btn" onclick="toggleTheme()" title="Toggle dark mode" style="font-size:1rem;">
+          <span id="theme-icon">🌙</span>
+        </button>
+        <div style="position:relative;">
+          <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
+            <div class="chip-avatar" id="chipAvatar">?</div>
+            <div class="profile-btn-info">
+              <span class="profile-btn-name" id="profileBtnName">Loading…</span>
+              <span class="profile-btn-role">Citizen</span>
+            </div>
+            <i class="fa-solid fa-chevron-down profile-chevron"></i>
+          </button>
+          <div class="profile-dropdown" id="profileDropdown">
+            <div class="dropdown-user-header">
+              <div class="dropdown-user-row">
+                <div class="dropdown-user-avatar" id="dropAvatar">?</div>
+                <div>
+                  <div class="dropdown-user-name" id="dropName">—</div>
+                  <div class="dropdown-user-email" id="dropEmail">—</div>
+                </div>
+              </div>
+            </div>
+            <div class="dropdown-items">
+              <a href="citizen_profile.html" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
+              <a href="citizen_dash.html" class="dropdown-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+              <div class="dropdown-divider"></div>
+              <a href="#" class="dropdown-item logout-item" onclick="doLogout()">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content" id="content">
+      <div style="text-align:center;padding:60px;color:var(--muted);">Loading profile…</div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  var BASE_URL = "http://localhost:5000";
+
+  var user = JSON.parse(sessionStorage.getItem('cityfix_user') || localStorage.getItem('cityfix_user') || '{}');
+  if (!user || !user.id) window.location.replace('../login.html');
+
+  var initials = user.initials || (user.name || '').split(' ').filter(Boolean).map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase() || '?';
+
+  document.getElementById('chipAvatar').textContent    = initials;
+  document.getElementById('profileBtnName').textContent = user.name || '—';
+  document.getElementById('dropAvatar').textContent    = initials;
+  document.getElementById('dropName').textContent      = user.name || '—';
+  document.getElementById('dropEmail').textContent     = user.email || '—';
+
+  // ── Helpers ──────────────────────────────────────────────────
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + (type || 'success');
+    setTimeout(function(){ t.classList.remove('show'); }, 3500);
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function doLogout() {
+    sessionStorage.removeItem('cityfix_user');
+    localStorage.removeItem('cityfix_user');
+    localStorage.removeItem('userEmail');
+    window.location.replace('../login.html');
+  }
+
+  function toggleProfile(e) {
+    e.stopPropagation();
+    document.getElementById('profileBtn').classList.toggle('open');
+    document.getElementById('profileDropdown').classList.toggle('open');
+  }
+
+  document.addEventListener('click', function(){
+    var btn = document.getElementById('profileBtn');
+    var dd  = document.getElementById('profileDropdown');
+    if (btn) btn.classList.remove('open');
+    if (dd)  dd.classList.remove('open');
+  });
+
+  // ── Toggle collapsible card ───────────────────────────────────
+  window.toggleCard = function(headerId, bodyId, chevronId) {
+    var header  = document.getElementById(headerId);
+    var body    = document.getElementById(bodyId);
+    var chevron = document.getElementById(chevronId);
+    if (!body) return;
+    var isOpen = body.classList.contains('open');
+    if (isOpen) {
+      body.classList.remove('open');
+      if (header)  header.classList.remove('open');
+      if (chevron) chevron.classList.remove('open');
+    } else {
+      body.classList.add('open');
+      if (header)  header.classList.add('open');
+      if (chevron) chevron.classList.add('open');
+    }
+  };
+
+  // ── Save profile ──────────────────────────────────────────────
+  window.saveProfile = async function() {
+    var name  = (document.getElementById('edit-name')  || {}).value || '';
+    var phone = (document.getElementById('edit-phone') || {}).value || '';
+    var addr  = (document.getElementById('edit-addr')  || {}).value || '';
+    var msgEl = document.getElementById('edit-msg');
+
+    name = name.trim();
+    if (!name) {
+      if (msgEl) { msgEl.textContent = 'Name cannot be empty.'; msgEl.className = 'msg-inline error'; msgEl.style.display = 'block'; }
+      return;
+    }
+
+    var btn = document.getElementById('save-btn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+
+    try {
+      var res  = await fetch(BASE_URL + '/api/auth/update-profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: user.id, name: name, phone: phone.trim(), address: addr.trim() })
+      });
+      var data = await res.json();
+      if (res.ok) {
+        user.name  = name;
+        user.phone = phone.trim();
+        user.initials = name.split(' ').filter(Boolean).map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
+        sessionStorage.setItem('cityfix_user', JSON.stringify(user));
+        localStorage.setItem('cityfix_user', JSON.stringify(user));
+        // Update header avatars
+        document.getElementById('chipAvatar').textContent    = user.initials;
+        document.getElementById('profileBtnName').textContent = name;
+        document.getElementById('dropAvatar').textContent    = user.initials;
+        document.getElementById('dropName').textContent      = name;
+        if (msgEl) { msgEl.textContent = '✓ Profile updated successfully!'; msgEl.className = 'msg-inline success'; msgEl.style.display = 'block'; }
+        // Re-render the view rows
+        var nameEl  = document.getElementById('view-name');
+        var phoneEl = document.getElementById('view-phone');
+        var addrEl  = document.getElementById('view-addr');
+        if (nameEl)  nameEl.textContent  = name  || '—';
+        if (phoneEl) phoneEl.textContent = phone || '—';
+        if (addrEl)  addrEl.textContent  = addr  || '—';
+        setTimeout(function(){
+          if (msgEl) msgEl.style.display = 'none';
+          toggleCard('edit-card-header', 'edit-card-body', 'edit-chevron');
+        }, 1800);
+      } else {
+        if (msgEl) { msgEl.textContent = data.message || 'Update failed.'; msgEl.className = 'msg-inline error'; msgEl.style.display = 'block'; }
+      }
+    } catch(e) {
+      if (msgEl) { msgEl.textContent = 'Cannot connect to server.'; msgEl.className = 'msg-inline error'; msgEl.style.display = 'block'; }
+    }
+    btn.disabled = false; btn.textContent = 'Save Changes';
+  };
+
+  // ── Password helpers ──────────────────────────────────────────
+  window.togglePw = function(id) {
+    var inp  = document.getElementById(id);
+    var icon = document.getElementById(id + '-icon');
+    if (!inp) return;
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    if (icon) { icon.classList.toggle('fa-eye'); icon.classList.toggle('fa-eye-slash'); }
+  };
+
+  window.checkStrength = function() {
+    var val  = (document.getElementById('pw-new') || {}).value || '';
+    var bar  = document.getElementById('pw-bar');
+    var hint = document.getElementById('pw-hint');
+    if (!bar) return;
+    var score = 0;
+    if (val.length >= 6)  score++;
+    if (val.length >= 10) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    var pcts   = [0,20,40,65,85,100];
+    var colors = ['','#ef4444','#f97316','#f59e0b','#22c55e','#16a34a'];
+    var labels = ['','Weak','Fair','Good','Strong','Very Strong'];
+    bar.style.width      = pcts[score] + '%';
+    bar.style.background = colors[score];
+    if (hint) hint.textContent = val.length ? labels[score] : '';
+  };
+
+  window.clearPwFields = function() {
+    ['pw-current','pw-new','pw-confirm'].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    var bar = document.getElementById('pw-bar');
+    if (bar) bar.style.width = '0';
+    var hint = document.getElementById('pw-hint');
+    if (hint) hint.textContent = '';
+    var msgEl = document.getElementById('pw-msg');
+    if (msgEl) msgEl.style.display = 'none';
+  };
+
+  window.changePassword = async function() {
+    var curr    = (document.getElementById('pw-current') || {}).value || '';
+    var newPw   = (document.getElementById('pw-new')     || {}).value || '';
+    var confirm = (document.getElementById('pw-confirm') || {}).value || '';
+    var msgEl   = document.getElementById('pw-msg');
+
+    if (!curr || !newPw || !confirm) {
+      if (msgEl) { msgEl.textContent = 'Please fill all password fields.'; msgEl.className = 'msg-inline error'; msgEl.style.display = 'block'; } return;
+    }
+    if (newPw.length < 6) {
+      if (msgEl) { msgEl.textContent = 'New password must be at least 6 characters.'; msgEl.className = 'msg-inline error'; msgEl.style.display = 'block'; } return;
+    }
+    if (newPw !== confirm) {
+      if (msgEl) { msgEl.textContent = 'Passwords do not match.'; msgEl.className = 'msg-inline error'; msgEl.style.display = 'block'; } return;
+    }
+
+    var btn = document.getElementById('pw-btn');
+    btn.disabled = true; btn.textContent = 'Changing…';
+    try {
+      var res  = await fetch(BASE_URL + '/api/auth/change-password', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: user.id, currentPassword: curr, newPassword: newPw })
+      });
+      var data = await res.json();
+      if (res.ok) {
+        if (msgEl) { msgEl.textContent = '✓ Password changed successfully!'; msgEl.className = 'msg-inline success'; msgEl.style.display = 'block'; }
+        clearPwFields();
+        setTimeout(function(){
+          if (msgEl) msgEl.style.display = 'none';
+          toggleCard('pwd-card-header', 'pwd-card-body', 'pwd-chevron');
+        }, 1800);
+      } else {
+        if (msgEl) { msgEl.textContent = data.message || 'Failed to change password.'; msgEl.className = 'msg-inline error'; msgEl.style.display = 'block'; }
+      }
+    } catch(e) {
+      if (msgEl) { msgEl.textContent = 'Cannot connect to server.'; msgEl.className = 'msg-inline error'; msgEl.style.display = 'block'; }
+    }
+    btn.disabled = false; btn.textContent = 'Change Password';
+  };
+
+  // ── Render ────────────────────────────────────────────────────
+  function render(dbUser, complaints) {
+    var total    = complaints ? complaints.length : 0;
+    var resolved = complaints ? complaints.filter(function(c){ return c.status === 'resolved'; }).length : 0;
+    var pending  = complaints ? complaints.filter(function(c){ return ['pending','assigned','in_progress'].includes(c.status); }).length : 0;
+
+    var n = dbUser.name    || user.name  || '—';
+    var e = dbUser.email   || user.email || '—';
+    var p = dbUser.phone   || user.phone || '—';
+    var a = dbUser.address || '—';
+
+    document.getElementById('content').innerHTML =
+
+      // ── Hero ──
+      '<div class="profile-hero">' +
+        '<div class="profile-banner"></div>' +
+        '<div class="profile-hero-body">' +
+          '<div class="profile-big-avatar">' + initials + '</div>' +
+          '<div class="profile-hero-info">' +
+            '<h2>' + n + '</h2>' +
+            '<div class="sub">Member since ' + fmtDate(dbUser.createdAt) + ' &nbsp;·&nbsp; Citizen Account</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      // ── Stats ──
+      '<div class="profile-stats">' +
+        '<div class="profile-stat blue"><div class="ps-val">' + total + '</div><div class="ps-lbl">Total</div></div>' +
+        '<div class="profile-stat amber"><div class="ps-val">' + pending + '</div><div class="ps-lbl">Pending</div></div>' +
+        '<div class="profile-stat green"><div class="ps-val">' + resolved + '</div><div class="ps-lbl">Resolved</div></div>' +
+      '</div>' +
+
+      // ── Info grid ──
+      '<div class="profile-grid">' +
+        '<div class="profile-card">' +
+          '<div class="profile-card-header">' +
+            '<h4>📞 Contact</h4>' +
+          '</div>' +
+          '<div class="profile-row"><span class="lbl">Name</span><span class="val" id="view-name">'  + n + '</span></div>' +
+          '<div class="profile-row"><span class="lbl">Email</span><span class="val">'                + e + '</span></div>' +
+          '<div class="profile-row"><span class="lbl">Phone</span><span class="val" id="view-phone">' + p + '</span></div>' +
+          '<div class="profile-row"><span class="lbl">Address</span><span class="val" id="view-addr">' + a + '</span></div>' +
+        '</div>' +
+        '<div class="profile-card">' +
+          '<div class="profile-card-header"><h4>🆔 Account</h4></div>' +
+          '<div class="profile-row"><span class="lbl">ID</span><span class="val" style="font-size:0.72rem;color:#2563eb;">' + (dbUser._id || '—') + '</span></div>' +
+          '<div class="profile-row"><span class="lbl">Role</span><span class="val">Citizen</span></div>' +
+          '<div class="profile-row"><span class="lbl">Joined</span><span class="val">' + fmtDate(dbUser.createdAt) + '</span></div>' +
+        '</div>' +
+      '</div>' +
+
+      // ── Edit Profile (collapsible) ──
+      '<div class="edit-card">' +
+        '<div class="edit-card-header" id="edit-card-header" onclick="toggleCard(\'edit-card-header\',\'edit-card-body\',\'edit-chevron\')">' +
+          '<h4><i class="fa-solid fa-pen-to-square"></i> Edit Profile</h4>' +
+          '<i class="fa-solid fa-chevron-down edit-card-chevron" id="edit-chevron"></i>' +
+        '</div>' +
+        '<div class="edit-card-body" id="edit-card-body">' +
+          '<div class="msg-inline" id="edit-msg"></div>' +
+          '<div class="edit-field"><label>Full Name</label><input type="text" id="edit-name" value="' + (dbUser.name || '') + '" /></div>' +
+          '<div class="edit-field"><label>Phone</label><input type="tel" id="edit-phone" value="' + (dbUser.phone || '') + '" placeholder="Enter phone number" /></div>' +
+          '<div class="edit-field"><label>Address</label><input type="text" id="edit-addr" value="' + (dbUser.address || '') + '" placeholder="Enter address" /></div>' +
+          '<div class="edit-field"><label>Email (cannot be changed)</label><input type="email" value="' + e + '" disabled /></div>' +
+          '<div class="edit-actions">' +
+            '<button class="btn btn-outline btn-sm" onclick="toggleCard(\'edit-card-header\',\'edit-card-body\',\'edit-chevron\')">Cancel</button>' +
+            '<button class="btn btn-primary btn-sm" id="save-btn" onclick="saveProfile()">Save Changes</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      // ── Change Password (collapsible) ──
+      '<div class="edit-card">' +
+        '<div class="edit-card-header" id="pwd-card-header" onclick="toggleCard(\'pwd-card-header\',\'pwd-card-body\',\'pwd-chevron\')">' +
+          '<h4><i class="fa-solid fa-lock"></i> Change Password</h4>' +
+          '<i class="fa-solid fa-chevron-down edit-card-chevron" id="pwd-chevron"></i>' +
+        '</div>' +
+        '<div class="edit-card-body" id="pwd-card-body">' +
+          '<div class="msg-inline" id="pw-msg"></div>' +
+          '<div class="edit-field pw-field"><label>Current Password</label>' +
+            '<input type="password" id="pw-current" placeholder="Enter current password" />' +
+            '<button class="pw-toggle" type="button" onclick="togglePw(\'pw-current\')" tabindex="-1"><i class="fa-solid fa-eye" id="pw-current-icon"></i></button>' +
+          '</div>' +
+          '<div class="edit-field pw-field"><label>New Password</label>' +
+            '<input type="password" id="pw-new" placeholder="Min. 6 characters" oninput="checkStrength()" />' +
+            '<button class="pw-toggle" type="button" onclick="togglePw(\'pw-new\')" tabindex="-1"><i class="fa-solid fa-eye" id="pw-new-icon"></i></button>' +
+            '<div class="pw-strength"><div class="pw-strength-bar" id="pw-bar"></div></div>' +
+            '<div class="pw-hint" id="pw-hint"></div>' +
+          '</div>' +
+          '<div class="edit-field pw-field"><label>Confirm New Password</label>' +
+            '<input type="password" id="pw-confirm" placeholder="Re-enter new password" />' +
+            '<button class="pw-toggle" type="button" onclick="togglePw(\'pw-confirm\')" tabindex="-1"><i class="fa-solid fa-eye" id="pw-confirm-icon"></i></button>' +
+          '</div>' +
+          '<div class="edit-actions">' +
+            '<button class="btn btn-outline btn-sm" onclick="clearPwFields()">Clear</button>' +
+            '<button class="btn btn-primary btn-sm" id="pw-btn" onclick="changePassword()">Change Password</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      // ── Danger ──
+      '<div class="danger-card">' +
+        '<div><h4>🚪 Sign Out</h4><p>Log out of your CityFix account on this device.</p></div>' +
+        '<button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>' +
+      '</div>';
+  }
+
+  // ── Init ──────────────────────────────────────────────────────
+  async function init() {
+    try {
+      var results = await Promise.all([
+        fetch(BASE_URL + '/api/auth/me?id=' + user.id),
+        fetch(BASE_URL + '/api/mycomplaints?userId=' + user.id)
+      ]);
+      var dbUser     = await results[0].json();
+      var complaints = [];
+      try { var cData = await results[1].json(); if (Array.isArray(cData)) complaints = cData; } catch(e) {}
+      if (!results[0].ok || !dbUser._id) {
+        render({ name: user.name, email: user.email, phone: user.phone || '', address: '' }, []);
+        return;
+      }
+      render(dbUser, complaints);
+    } catch(e) {
+      render({ name: user.name, email: user.email, phone: user.phone || '', address: '' }, []);
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>

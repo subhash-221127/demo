@@ -1,0 +1,277 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix Admin – Departments</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="admin.css" />
+  <style>
+    /* Add card — same size as dept-card but dashed */
+    .dept-add-card {
+      background: var(--card);
+      border: 2px dashed var(--card-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      min-height: 220px;
+      transition: border-color 0.2s, background 0.2s, transform 0.2s;
+      color: var(--text-secondary);
+    }
+    .dept-add-card:hover {
+      border-color: var(--navy, #1a3c6e);
+      background: rgba(26,60,110,0.03);
+      transform: translateY(-2px);
+      color: var(--navy, #1a3c6e);
+    }
+    .dept-add-icon {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: rgba(26,60,110,0.08);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; transition: background 0.2s;
+    }
+    .dept-add-card:hover .dept-add-icon { background: rgba(26,60,110,0.15); }
+    .dept-add-label { font-weight: 700; font-size: 0.95rem; }
+    .dept-add-sub   { font-size: 0.8rem; text-align: center; line-height: 1.5; }
+
+    /* Modal */
+    .modal-overlay {
+      display:none; position:fixed; inset:0; z-index:999;
+      background:rgba(0,0,0,0.45); align-items:center; justify-content:center;
+    }
+    .modal-overlay.show { display:flex; }
+    .modal {
+      background:var(--bg-card,#fff); border-radius:20px;
+      padding:32px; width:100%; max-width:420px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.2);
+    }
+    .modal h3 { font-size:1.1rem; font-weight:800; color:var(--text-primary); margin-bottom:20px; }
+    .modal-field { margin-bottom:16px; }
+    .modal-field label { display:block; font-size:0.8rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em; }
+    .modal-field input, .modal-field textarea {
+      width:100%; padding:10px 12px; border-radius:10px;
+      border:1.5px solid var(--border,#e2e8f0); background:var(--bg-input,#f8fafc);
+      color:var(--text-primary); font-size:0.9rem; font-family:inherit; outline:none; box-sizing:border-box;
+    }
+    .modal-field input:focus, .modal-field textarea:focus { border-color:#1a3c6e; }
+    .modal-actions { display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
+
+    .toast {
+      position:fixed; bottom:24px; right:24px; z-index:9999;
+      background:#1a3c6e; color:#fff; padding:14px 20px;
+      border-radius:12px; font-weight:600; font-size:0.9rem;
+      box-shadow:0 8px 24px rgba(0,0,0,0.2);
+      transform:translateY(80px); opacity:0; transition:transform 0.3s,opacity 0.3s;
+    }
+    .toast.show    { transform:translateY(0); opacity:1; }
+    .toast.success { background:#16a34a; }
+    .toast.error   { background:#dc2626; }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"   class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+      <a href="complaints.html"  class="sidebar-link"><span class="icon">📋</span> Complaints</a>
+      <a href="officers.html"    class="sidebar-link"><span class="icon">👮</span> Officers</a>
+      <a href="citizens.html"    class="sidebar-link"><span class="icon">👥</span> Citizens</a>
+      <a href="departments.html" class="sidebar-link active"><span class="icon">🏢</span> Departments</a>
+    </nav>
+</aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Departments</h1>
+        <span class="breadcrumb">All Departments</span>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+        <div class="admin-profile" id="admin-profile" onclick="document.getElementById('profile-dropdown').classList.toggle('show')">
+          <div class="admin-avatar" id="admin-avatar">AD</div>
+          <div class="admin-info"><div class="name" id="admin-name">Admin User</div><div class="role">Administrator</div></div>
+          <div class="profile-dropdown" id="profile-dropdown">
+            <a href="profile.html">👤 My Profile</a>
+            <a href="../login.html" onclick="doLogout(event)">🚪 Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div id="loading-msg" style="text-align:center;padding:60px;color:var(--text-secondary);">Loading departments…</div>
+      <div class="dept-grid" id="dept-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Department Modal -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <h3>🏢 Add New Department</h3>
+    <div class="modal-field">
+      <label>Department Name *</label>
+      <input type="text" id="f-name" placeholder="e.g. Public Safety" />
+    </div>
+
+    <div class="modal-field">
+      <label>Description</label>
+      <textarea id="f-desc" rows="2" placeholder="Optional…" style="resize:none;"></textarea>
+    </div>
+    <div id="modal-error" style="display:none;color:#dc2626;font-size:0.85rem;margin-top:4px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="add-btn" onclick="addDept()">Add Department</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="theme.js"></script>
+<script src="admin-auth.js"></script>
+<script>
+
+  var allDepts      = [];
+
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + (type || 'success');
+    setTimeout(function(){ t.classList.remove('show'); }, 3500);
+  }
+
+  function renderGrid() {
+    document.getElementById('loading-msg').style.display = 'none';
+    var grid = document.getElementById('dept-grid');
+
+    var cards = allDepts.map(function(dept) {
+      // Live stats come directly from the API (server-side computed)
+      var total    = dept.totalComplaints    || 0;
+      var resolved = dept.resolvedComplaints || 0;
+      var pending  = (dept.pendingComplaints || 0) + (dept.inProgressComplaints || 0);
+      var officers = dept.totalOfficers  || 0;
+      var active   = dept.activeOfficers || 0;
+
+      return '<div class="dept-card" onclick="goToDetail(\'' + dept._id + '\')">' +
+        '<h4>&#127970; ' + dept.name + '</h4>' +
+        '<div class="dept-stat"><span class="label">Total Complaints</span><span class="value">' + total + '</span></div>' +
+        '<div class="dept-stat"><span class="label">Resolved</span><span class="value" style="color:#16a34a;">' + resolved + '</span></div>' +
+        '<div class="dept-stat"><span class="label">Pending / Active</span><span class="value" style="color:#d97706;">' + pending + '</span></div>' +
+        '<div class="dept-stat"><span class="label">Officers</span><span class="value">' + officers + '</span></div>' +
+        '<div class="dept-stat" style="border-bottom:none;"><span class="label">Active Officers</span><span class="value" style="color:#16a34a;">' + active + '</span></div>' +
+      '</div>';
+    });
+
+    // Add card at the end — same grid slot
+    cards.push(
+      '<div class="dept-add-card" onclick="openModal()">' +
+        '<div class="dept-add-icon">+</div>' +
+        '<div class="dept-add-label">Add Department</div>' +
+        '<div class="dept-add-sub">Click to create a new<br/>department</div>' +
+      '</div>'
+    );
+
+    grid.innerHTML = cards.join('');
+  }
+
+  function goToDetail(id) {
+    window.location.href = 'department-detail.html?id=' + id;
+  }
+
+  function openModal() {
+    document.getElementById('add-modal').classList.add('show');
+    document.getElementById('modal-error').style.display = 'none';
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-desc').value = '';
+    setTimeout(function(){ document.getElementById('f-name').focus(); }, 100);
+  }
+
+  function closeModal() {
+    document.getElementById('add-modal').classList.remove('show');
+  }
+
+  async function addDept() {
+    var name  = document.getElementById('f-name').value.trim();
+    var desc  = document.getElementById('f-desc').value.trim();
+    var errEl = document.getElementById('modal-error');
+
+    if (!name) {
+      errEl.textContent = 'Department name is required.';
+      errEl.style.display = 'block'; return;
+    }
+
+    var btn = document.getElementById('add-btn');
+    btn.disabled = true; btn.textContent = 'Adding…';
+    errEl.style.display = 'none';
+
+    try {
+      var res  = await fetch('/api/departments', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, description: desc })
+      });
+      var data = await res.json();
+      if (res.ok) {
+        closeModal();
+        showToast(name + ' added successfully!', 'success');
+        await loadAll();
+      } else {
+        errEl.textContent = data.message || 'Failed.';
+        errEl.style.display = 'block';
+      }
+    } catch(e) {
+      errEl.textContent = 'Cannot connect to server.';
+      errEl.style.display = 'block';
+    }
+    btn.disabled = false; btn.textContent = 'Add Department';
+  }
+
+  async function loadAll() {
+    try {
+      var res  = await fetch('/api/departments');
+      var data = await res.json();
+      // data may be an array of depts or an error object
+      allDepts = Array.isArray(data) ? data : [];
+      renderGrid();
+    } catch(e) {
+      // Even on error, still call renderGrid so Add card shows
+      allDepts = [];
+      renderGrid();
+      // Show error above grid
+      var msg = document.getElementById('loading-msg');
+      msg.style.display = 'block';
+      msg.textContent = 'Could not load department stats. Server may be starting up.';
+      msg.style.color = '#dc2626';
+      msg.style.fontSize = '0.85rem';
+    }
+  }
+
+  document.getElementById('add-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  document.addEventListener('click', function(e) {
+    var p = document.getElementById('admin-profile');
+    if (p && !p.contains(e.target)) document.getElementById('profile-dropdown').classList.remove('show');
+  });
+
+  loadAll();
+
+</script>
+</body>
+</html>

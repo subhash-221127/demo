@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CityFix – Escalated Complaints</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="officer.css"/>
+  <style>
+    .escalation-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .escalation-badge.level2 {
+      background: #fff7ed;
+      color: #c2410c;
+      border: 1.5px solid #fed7aa;
+    }
+    .escalation-badge.level3 {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1.5px solid #fecaca;
+    }
+    .escalation-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1.5px solid #e5e7eb;
+      padding: 18px 22px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .escalation-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, #f97316, #dc2626);
+      border-radius: 4px 0 0 4px;
+    }
+    .escalation-card:hover {
+      border-color: #f97316;
+      box-shadow: 0 4px 20px rgba(249,115,22,0.12);
+      transform: translateY(-1px);
+    }
+    .escalation-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .escalation-id {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--slate-400);
+      margin-bottom: 3px;
+    }
+    .escalation-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--navy);
+    }
+    .escalation-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.78rem;
+      color: var(--slate-500);
+      margin-top: 8px;
+    }
+    .escalation-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .escalated-from-box {
+      background: #fff7ed;
+      border: 1.5px solid #fed7aa;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      color: #92400e;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .escalated-from-box i { color: #f97316; }
+    .page-banner {
+      background: linear-gradient(135deg, #fff7ed, #fef3c7);
+      border: 1.5px solid #fed7aa;
+      border-radius: 16px;
+      padding: 18px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .page-banner-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #f97316, #dc2626);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .page-banner h2 {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #92400e;
+      margin: 0 0 2px;
+    }
+    .page-banner p {
+      font-size: 0.8rem;
+      color: #b45309;
+      margin: 0;
+    }
+    [data-theme="dark"] .escalation-card { background: var(--card-bg); border-color: var(--slate-700); }
+    [data-theme="dark"] .escalation-card::before { background: linear-gradient(180deg,#f97316,#dc2626); }
+    [data-theme="dark"] .escalated-from-box { background:#431407;border-color:#7c2d12;color:#fdba74; }
+    [data-theme="dark"] .page-banner { background: linear-gradient(135deg,#431407,#451a03); border-color:#7c2d12; }
+    [data-theme="dark"] .page-banner h2 { color:#fcd34d; }
+    [data-theme="dark"] .page-banner p { color:#fde68a; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="../index.html" class="sidebar-logo">
+    <div class="logo-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+    </div>
+    <span class="logo-text">City<span>Fix</span></span>
+  </a>
+  <nav class="sidebar-nav">
+    <a href="complaints.html"  class="sidebar-link"><span class="icon">📋</span> My Complaints</a>
+    <a href="escalated.html"   class="sidebar-link active"><span class="icon">🔺</span> Escalated</a>
+    <a href="profile.html"     class="sidebar-link"><span class="icon">👤</span> My Profile</a>
+  </nav>
+</aside>
+
+<div class="main">
+  <header class="header">
+    <div class="header-left">
+      <h1 class="page-title">Escalated Complaints</h1>
+      <span class="page-sub" id="topbar-sub">Loading…</span>
+    </div>
+    <div class="header-right">
+      <button class="notif-btn" id="dark-toggle-btn" onclick="toggleEscTheme()" title="Toggle dark mode" style="font-size:1rem;margin-right:4px;">
+        <span id="dark-toggle-icon">🌙</span>
+      </button>
+      <div style="position:relative;">
+        <button class="profile-btn" id="user-btn" onclick="toggleUserMenu(event)">
+          <div class="chip-avatar" id="avatar-initials">OF</div>
+          <div class="profile-btn-info">
+            <span class="profile-btn-name" id="topbar-username">Officer</span>
+            <span class="profile-btn-role" id="topbar-level-badge">Level 2</span>
+          </div>
+          <i class="fa-solid fa-chevron-down profile-chevron"></i>
+        </button>
+        <div class="profile-dropdown" id="user-dropdown">
+          <div class="dropdown-user-header">
+            <div class="dropdown-user-row">
+              <div class="dropdown-user-avatar" id="dropdown-initials">OF</div>
+              <div>
+                <div class="dropdown-user-name" id="dropdown-name">Officer</div>
+                <div class="dropdown-user-email" id="dropdown-email">—</div>
+              </div>
+            </div>
+            <div class="dropdown-user-tags">
+              <span class="dropdown-user-tag tag-role">Officer</span>
+              <span class="dropdown-user-tag tag-dept" id="dropdown-dept">—</span>
+            </div>
+          </div>
+          <div class="dropdown-items">
+            <a href="profile.html" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item logout-item" onclick="handleLogout()">
+              <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-content">
+    <div class="page-banner">
+      <div class="page-banner-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div>
+        <h2>⚠️ Escalated to You</h2>
+        <p>These complaints were not resolved by the Level 1 officer within the 2-day SLA and have been escalated for your immediate attention.</p>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" type="text" id="esc-search" placeholder="Search by ID, title, location…" oninput="filterEscalated()"/>
+      </div>
+      <select class="filter-select" id="esc-filter-severity" onchange="filterEscalated()">
+        <option value="">All Severity</option>
+        <option value="critical">Critical</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+      <select class="filter-select" id="esc-sort" onchange="filterEscalated()">
+        <option value="">Sort By</option>
+        <option value="recent">Escalated Recently</option>
+        <option value="oldest">Escalated First</option>
+        <option value="sev">By Severity</option>
+      </select>
+    </div>
+
+    <!-- Stats strip -->
+    <div class="mini-stats">
+      <div class="mini-stat" style="background:#fff7ed;border-color:rgba(249,115,22,0.2);">
+        <div class="mini-stat-val" id="esc-stat-total" style="color:#c2410c;">0</div>
+        <div class="mini-stat-label">Total Escalated</div>
+      </div>
+      <div class="mini-stat" style="background:#fef2f2;border-color:rgba(220,38,38,0.2);">
+        <div class="mini-stat-val" id="esc-stat-critical" style="color:#b91c1c;">0</div>
+        <div class="mini-stat-label">Critical</div>
+      </div>
+      <div class="mini-stat" style="background:#fffbeb;border-color:rgba(245,158,11,0.2);">
+        <div class="mini-stat-val" id="esc-stat-high" style="color:#d97706;">0</div>
+        <div class="mini-stat-label">High Severity</div>
+      </div>
+    </div>
+
+    <div id="esc-loading" style="text-align:center;padding:50px;color:var(--slate-400);">
+      <i class="fa-solid fa-spinner fa-spin" style="font-size:1.6rem;"></i>
+      <p style="margin-top:12px;font-size:0.88rem;">Loading escalated complaints…</p>
+    </div>
+
+    <div id="esc-error" style="display:none;text-align:center;padding:60px 20px;color:var(--red);">
+      <i class="fa-solid fa-circle-exclamation" style="font-size:2rem;margin-bottom:12px;display:block;"></i>
+      <span id="esc-error-msg">Could not load escalated complaints.</span>
+    </div>
+
+    <div id="esc-list" style="display:none;"></div>
+
+    <div id="esc-empty" style="display:none;text-align:center;padding:60px 20px;">
+      <i class="fa-solid fa-circle-check" style="font-size:2.5rem;color:#22c55e;margin-bottom:12px;display:block;"></i>
+      <h3 style="font-size:1rem;font-weight:800;color:var(--navy);margin-bottom:6px;">No Escalated Complaints</h3>
+      <p style="font-size:0.85rem;color:var(--slate-500);">All complaints in your department are within SLA. Great work!</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+<script src="officer.js"></script>
+<script>
+  (function() {
+    const saved = localStorage.getItem('cityfix-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.addEventListener('DOMContentLoaded', () => {
+      const icon = document.getElementById('dark-toggle-icon');
+      if (icon) icon.textContent = saved === 'dark' ? '☀️' : '🌙';
+    });
+  })();
+
+  function toggleEscTheme() {
+    const cur  = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('cityfix-theme', next);
+    const icon = document.getElementById('dark-toggle-icon');
+    if (icon) icon.textContent = next === 'dark' ? '☀️' : '🌙';
+  }
+
+  const SEVERITY_ORDER = { critical:0, high:1, medium:2, low:3 };
+  let allEscalated = [];
+
+  function escSeverityBadge(s) {
+    const cls = { critical:'badge-critical', high:'badge-high', medium:'badge-medium', low:'badge-low' };
+    const lbl = s ? s.charAt(0).toUpperCase()+s.slice(1) : s;
+    return `<span class="badge ${cls[s]||'badge-medium'}">${lbl}</span>`;
+  }
+  function escStatusBadge(s) {
+    const map = {
+      assigned:    '<span class="badge badge-pending"><i class="fa-solid fa-user-tie"></i> Assigned</span>',
+      in_progress: '<span class="badge badge-progress"><i class="fa-solid fa-rotate"></i> In Progress</span>',
+    };
+    return map[s] || `<span class="badge badge-pending">${s}</span>`;
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+
+  function renderEscalated(list) {
+    const container = document.getElementById('esc-list');
+    if (!list.length) {
+      document.getElementById('esc-empty').style.display = 'block';
+      container.style.display = 'none';
+      return;
+    }
+    document.getElementById('esc-empty').style.display = 'none';
+    container.style.display = 'block';
+
+    container.innerHTML = list.map(c => {
+      const escalLevel = c.escalationLevel || 2;
+      const l1Officer  = c.officerId && typeof c.officerId === 'object'
+        ? c.officerId.name + ' (' + (c.officerId.designation||'L1 Officer') + ')'
+        : 'Level 1 Officer';
+      const escalAt = escalLevel === 2 ? fmtDate(c.escalatedAt) : fmtDate(c.escalatedToL3At);
+
+      // Build escalation history timeline
+      const history = c.escalationHistory || [];
+      const historyHTML = history.length > 0 ? `
+        <div style="margin-top:10px;border-top:1px solid #fed7aa;padding-top:10px;">
+          <div style="font-size:0.7rem;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">
+            <i class="fa-solid fa-clock-rotate-left"></i> Handler History
+          </div>
+          ${history.map((h, idx) => `
+            <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;font-size:0.78rem;">
+              <div style="width:22px;height:22px;border-radius:50%;background:${idx === history.length-1 ? 'linear-gradient(135deg,#dc2626,#991b1b)' : 'linear-gradient(135deg,#3b82f6,#1d4ed8)'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:800;flex-shrink:0;">L${h.level}</div>
+              <div>
+                <div style="font-weight:700;color:var(--navy);">${h.officerName || '—'}</div>
+                <div style="color:var(--slate-500);font-size:0.72rem;">Assigned ${h.assignedAt ? fmtDate(h.assignedAt) : '—'}${idx < history.length-1 ? ' · <span style="color:#f97316;">Escalated away</span>' : ' · <span style="color:#dc2626;font-weight:700;">Current Handler</span>'}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : '';
+
+      return `
+        <div class="escalation-card" onclick="window.location.href='officer_view_complaint.html?id=${c._id}&from=escalated'">
+          <div class="escalation-header">
+            <div>
+              <div class="escalation-id">${c.complaintId || c._id}</div>
+              <div class="escalation-title">${c.title || 'Untitled'}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+              <span class="escalation-badge level${escalLevel}">
+                <i class="fa-solid fa-triangle-exclamation"></i> Level ${escalLevel} Escalation
+              </span>
+              ${escSeverityBadge(c.severity)}
+            </div>
+          </div>
+          <div class="escalation-meta">
+            <span><i class="fa-solid fa-building"></i> ${c.department || '—'}</span>
+            <span><i class="fa-solid fa-location-dot"></i> ${c.location?.address || c.location || '—'}</span>
+            <span><i class="fa-regular fa-calendar"></i> Filed: ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—'}</span>
+          </div>
+          <div class="escalated-from-box">
+            <i class="fa-solid fa-arrow-turn-up"></i>
+            <span>Escalated from <strong>${l1Officer}</strong> on ${escalAt}</span>
+            ${escStatusBadge(c.status)}
+          </div>
+          ${historyHTML}
+        </div>`;
+    }).join('');
+  }
+
+  function filterEscalated() {
+    const q   = document.getElementById('esc-search')?.value.toLowerCase() || '';
+    const sev = document.getElementById('esc-filter-severity')?.value || '';
+    const sort = document.getElementById('esc-sort')?.value || '';
+
+    let filtered = allEscalated.filter(c =>
+      (!q   || (c.title||'').toLowerCase().includes(q) || (c.complaintId||'').toLowerCase().includes(q) || (c.location?.address||'').toLowerCase().includes(q)) &&
+      (!sev || c.severity === sev)
+    );
+
+    if (sort === 'recent') filtered = filtered.slice().sort((a,b) => new Date(b.escalatedAt||0) - new Date(a.escalatedAt||0));
+    else if (sort === 'oldest') filtered = filtered.slice().sort((a,b) => new Date(a.escalatedAt||0) - new Date(b.escalatedAt||0));
+    else if (sort === 'sev')    filtered = filtered.slice().sort((a,b) => (SEVERITY_ORDER[a.severity]??99) - (SEVERITY_ORDER[b.severity]??99));
+
+    renderEscalated(filtered);
+
+    document.getElementById('esc-stat-total').textContent    = allEscalated.length;
+    document.getElementById('esc-stat-critical').textContent = allEscalated.filter(c=>c.severity==='critical').length;
+    document.getElementById('esc-stat-high').textContent     = allEscalated.filter(c=>c.severity==='high').length;
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    populateTopbar();
+
+    // Show level badge
+    const levelBadge = document.getElementById('topbar-level-badge');
+    if (levelBadge && SESSION.level) levelBadge.textContent = `Level ${SESSION.level} Officer`;
+
+    const officerMongoId = SESSION.id || SESSION._id;
+    if (!officerMongoId) {
+      document.getElementById('esc-loading').style.display = 'none';
+      document.getElementById('esc-error').style.display = 'block';
+      document.getElementById('esc-error-msg').textContent = 'Session error. Please log in again.';
+      return;
+    }
+
+    try {
+      const endpoint = SESSION.level === 3
+        ? `${BASE_URL}/api/complaints/escalated/level3?officerId=${officerMongoId}`
+        : `${BASE_URL}/api/complaints/escalated/level2?officerId=${officerMongoId}`;
+
+      const resp = await fetch(endpoint);
+      if (!resp.ok) throw new Error('Failed to fetch');
+
+      allEscalated = await resp.json();
+      document.getElementById('esc-loading').style.display = 'none';
+
+      const topSub = document.getElementById('topbar-sub');
+      if (topSub) topSub.textContent = `${allEscalated.length} escalated complaint${allEscalated.length !== 1 ? 's' : ''} requiring attention`;
+
+      filterEscalated();
+    } catch (err) {
+      document.getElementById('esc-loading').style.display = 'none';
+      document.getElementById('esc-error').style.display = 'block';
+      document.getElementById('esc-error-msg').textContent = 'Could not connect to server. Is the backend running on port 5000?';
+    }
+  });
+</script>
+</body>
+</html>

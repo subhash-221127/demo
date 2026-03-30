@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix — Citizen Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="citizen.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="../admin/theme.js"></script>
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a href="#" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
+          stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="citizen_dash.html" class="sidebar-link active"><span class="icon">📊</span> Dashboard</a>
+      <a href="citizen_submit.html" class="sidebar-link"><span class="icon">📋</span> New Complaint</a>
+      <a href="citizen_mycomplaints.html" class="sidebar-link"><span class="icon">📁</span> My Complaints</a>
+      <a href="citizen_track.html" class="sidebar-link"><span class="icon">📍</span> Track Status</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <header class="header">
+      <div class="header-left">
+        <h1 class="page-title">Dashboard</h1>
+        <span class="page-sub">Good morning, Jane 👋</span>
+      </div>
+      <div class="header-right">
+          <button class="notif-btn" onclick="toggleTheme()" title="Toggle dark mode" style="font-size:1rem;">
+          <span id="theme-icon">🌙</span>
+        </button>
+      <div style="position:relative;">
+          <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
+            <div class="chip-avatar">JD</div>
+            <div class="profile-btn-info">
+              <span class="profile-btn-name">Jane Doe</span>
+              <span class="profile-btn-role">Citizen</span>
+            </div>
+            <i class="fa-solid fa-chevron-down profile-chevron"></i>
+          </button>
+          <div class="profile-dropdown" id="profileDropdown">
+            <div class="dropdown-user-header">
+              <div class="dropdown-user-row">
+                <div class="dropdown-user-avatar">JD</div>
+                <div>
+                  <div class="dropdown-user-name">Jane Doe</div>
+                  <div class="dropdown-user-email">jane@email.com</div>
+                </div>
+              </div>
+              <div class="dropdown-user-tags">
+                <span class="dropdown-user-tag">Citizen</span>
+                <span class="dropdown-user-tag">Springfield</span>
+              </div>
+            </div>
+            <div class="dropdown-items">
+              <a href="citizen_profile.html" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
+              <a href="citizen_dash.html" class="dropdown-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+              <div class="dropdown-divider"></div>
+              <a href="../login.html" class="dropdown-item logout-item">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- STATS -->
+      <div class="stats-row">
+        <div class="stat-card c-navy">
+          <div class="stat-icon navy"><i class="fa-solid fa-file-lines"></i></div>
+          <div>
+            <p class="stat-num" id="s-total">8</p>
+            <p class="stat-lbl">Total Filed</p>
+          </div>
+        </div>
+        <div class="stat-card c-orange">
+          <div class="stat-icon orange"><i class="fa-solid fa-clock"></i></div>
+          <div>
+            <p class="stat-num" id="s-pending">3</p>
+            <p class="stat-lbl">Pending</p>
+          </div>
+        </div>
+        <div class="stat-card c-blue">
+          <div class="stat-icon blue"><i class="fa-solid fa-rotate"></i></div>
+          <div>
+            <p class="stat-num" id="s-progress">2</p>
+            <p class="stat-lbl">In Progress</p>
+          </div>
+        </div>
+        <div class="stat-card c-green">
+          <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+          <div>
+            <p class="stat-num" id="s-resolved">3</p>
+            <p class="stat-lbl">Resolved</p>
+          </div>
+        </div>
+        </div>
+
+      <!-- SINGLE COLUMN LAYOUT -->
+      <div style="display:block;">
+
+        <!-- COMPLAINTS LIST -->
+        <div>
+          <!-- Filters -->
+          <div class="toolbar">
+            <div class="search-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="searchInput" placeholder="Search complaints…" />
+            </div>
+            <select class="filter-sel" id="statusFilter">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="inprogress">In Progress</option>
+              <option value="resolved">Resolved</option>
+            </select>
+            <select class="filter-sel" id="categoryFilter">
+              <option value="">All Categories</option>
+            </select>
+            <select class="filter-sel" id="dateFilter">
+              <option value="">All Time</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <span style="font-size:0.82rem;font-weight:700;color:var(--muted);" id="listCount">8 complaints</span>
+            <a href="citizen_submit.html" class="btn btn-orange btn-sm"><i class="fa-solid fa-plus"></i> New
+              Complaint</a>
+          </div>
+
+          <div id="complaintList"></div>
+          <div class="empty-state" id="emptyState" style="display:none;">
+            <i class="fa-solid fa-folder-open"></i>
+            <p>No complaints found</p>
+            <small>Try adjusting your filters</small>
+          </div>
+        </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL MODAL -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <span class="modal-id" id="modalId"></span>
+          <h3 id="modalTitle"></h3>
+        </div>
+        <button class="modal-close" id="modalClose"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">
+    <i class="fa-solid fa-circle-check"></i>
+    <div><strong id="toastMsg">Done!</strong><small id="toastSub"></small></div>
+  </div>
+
+  <!-- ✅ FIX: src script and inline script are now properly separated -->
+  <script src="api.js"></script>
+  <script src="citizen_dash.js">
+// Load department names into category filter
+(async function() {
+  try {
+    const res   = await fetch('/api/departments');
+    const depts = await res.json();
+    const sel   = document.getElementById('categoryFilter');
+    if (sel && Array.isArray(depts)) {
+      depts.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.name; opt.textContent = d.name;
+        sel.appendChild(opt);
+      });
+    }
+  } catch(e) { console.error('Failed to load categories', e); }
+})();
+</script>
+</body>
+
+</html>

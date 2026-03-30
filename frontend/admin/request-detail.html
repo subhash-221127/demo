@@ -1,0 +1,143 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix Admin – Officer Request Detail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+<div class="admin-layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">C</div>
+      <div class="sidebar-brand">City<span>Fix</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"  class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+      <a href="complaints.html" class="sidebar-link"><span class="icon">📋</span> Complaints</a>
+      <a href="officers.html"   class="sidebar-link"><span class="icon">👮</span> Officers</a>
+      <a href="citizens.html"   class="sidebar-link"><span class="icon">👥</span> Citizens</a>
+      <a href="departments.html" class="sidebar-link"><span class="icon">🏢</span> Departments</a>
+      <a href="hierarchy.html"  class="sidebar-link"><span class="icon">🏗️</span> Hierarchy</a>
+      <a href="officer-requests.html" class="sidebar-link active"><span class="icon">📩</span> Officer Requests</a>
+    </nav>
+</aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Officer Request</h1>
+        <span class="breadcrumb" id="breadcrumb">Loading…</span>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+        <div class="admin-profile" id="admin-profile" onclick="document.getElementById('profile-dropdown').classList.toggle('show')">
+          <div class="admin-avatar" id="admin-avatar">AD</div>
+          <div class="admin-info"><div class="name" id="admin-name">Admin User</div><div class="role">Administrator</div></div>
+          <div class="profile-dropdown" id="profile-dropdown">
+            <a href="profile.html">👤 My Profile</a>
+            <a href="../login.html" onclick="doLogout(event)">🚪 Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content detail-page" id="page-content">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+</div>
+
+<script src="demo-data.js"></script>
+<script src="theme.js"></script>
+<script src="admin-auth.js"></script>
+<script>
+  const params    = new URLSearchParams(window.location.search);
+  const requestId = params.get('id');
+  const request   = DEMO_OFFICER_REQUESTS.find(r => r.id === requestId);
+
+  if (!request) {
+    document.getElementById('page-content').innerHTML = `
+      <div style="text-align:center;padding:80px 20px;">
+        <div style="font-size:4rem;margin-bottom:16px;">🔍</div>
+        <h2>Request Not Found</h2>
+        <p style="color:var(--text-secondary);margin:8px 0 24px;">The request you're looking for doesn't exist.</p>
+        <a href="officer-requests.html" class="btn btn-primary">← Back to Requests</a>
+      </div>`;
+  } else {
+    document.getElementById('breadcrumb').textContent = request.id + ' — ' + request.name;
+
+    function renderPage() {
+      const initials  = request.name.split(' ').map(n => n[0]).join('');
+      const isPending = request.status === 'Pending';
+
+      document.getElementById('page-content').innerHTML = `
+        <a href="officer-requests.html" class="btn btn-outline btn-sm" style="margin-bottom:20px;">← Back to Requests</a>
+
+        <div class="request-hero">
+          <div class="request-avatar">${initials}</div>
+          <div class="request-name">${request.name}</div>
+          <div class="request-designation">${request.designation}</div>
+          <div class="request-date">📅 Applied on ${request.requestDate}</div>
+          <div style="margin-top:14px;">
+            <span class="status-badge ${request.status==='Pending'?'pending':request.status==='Accepted'?'resolved':'rejected'}">${request.status}</span>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-section-title">📧 Contact Information</div>
+          <div class="info-section-body">
+            <div class="info-row"><span class="info-label">Full Name</span><span class="info-value">${request.name}</span></div>
+            <div class="info-row"><span class="info-label">Email</span><span class="info-value">${request.email}</span></div>
+            <div class="info-row"><span class="info-label">Phone</span><span class="info-value">${request.phone}</span></div>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-section-title">🏢 Professional Details</div>
+          <div class="info-section-body">
+            <div class="info-row"><span class="info-label">Request ID</span><span class="info-value">${request.id}</span></div>
+            <div class="info-row"><span class="info-label">Department</span><span class="info-value">${request.department}</span></div>
+            <div class="info-row"><span class="info-label">Designation</span><span class="info-value">${request.designation}</span></div>
+            <div class="info-row"><span class="info-label">Experience</span><span class="info-value">${request.experience}</span></div>
+            <div class="info-row"><span class="info-label">Qualification</span><span class="info-value">${request.qualification}</span></div>
+            <div class="info-row"><span class="info-label">Applied On</span><span class="info-value">${request.requestDate}</span></div>
+          </div>
+        </div>
+
+        ${isPending ? `
+        <div class="action-bar">
+          <button class="btn btn-danger"  onclick="handleAction('Rejected')">❌ Reject Request</button>
+          <button class="btn btn-success" onclick="handleAction('Accepted')">✅ Accept Request</button>
+        </div>` : `
+        <div class="action-result">
+          <div class="icon">${request.status === 'Accepted' ? '✅' : '❌'}</div>
+          <h3>Request ${request.status}</h3>
+          <p>${request.status === 'Accepted'
+            ? request.name + ' has been approved as ' + request.designation + ' in the ' + request.department + ' department.'
+            : request.name + "'s officer registration request has been rejected."}</p>
+          <a href="officer-requests.html" class="btn btn-outline btn-sm" style="margin-top:20px;">← Back to Requests</a>
+        </div>`}
+      `;
+    }
+
+    window.handleAction = function(action) {
+      if (!confirm(`Are you sure you want to ${action === 'Accepted' ? 'accept' : 'reject'} ${request.name}'s request?`)) return;
+      request.status = action;
+      renderPage();
+    };
+
+    renderPage();
+  }
+
+  document.addEventListener('click', e => {
+    if (!document.getElementById('admin-profile').contains(e.target))
+      document.getElementById('profile-dropdown').classList.remove('show');
+  });
+</script>
+</body>
+</html>

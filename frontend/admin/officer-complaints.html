@@ -1,0 +1,314 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix Admin – Officer Cases</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="admin.css" />
+  <style>
+    /* Filter tabs */
+    .filter-tabs {
+      display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .filter-tab {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 18px; border-radius: 20px; border: 1.5px solid var(--card-border);
+      background: var(--card); font-size: 0.85rem; font-weight: 600;
+      color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+      font-family: inherit;
+    }
+    .filter-tab:hover { border-color: #1a3c6e; color: #1a3c6e; }
+    .filter-tab.active {
+      background: #1a3c6e; border-color: #1a3c6e;
+      color: #fff;
+    }
+    .filter-tab .count {
+      background: rgba(255,255,255,0.25); border-radius: 99px;
+      padding: 1px 7px; font-size: 0.75rem; font-weight: 700;
+    }
+    .filter-tab:not(.active) .count {
+      background: var(--card-border); color: var(--text-secondary);
+    }
+
+    /* Officer mini-header */
+    .officer-bar {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--card); border: 1px solid var(--card-border);
+      border-radius: var(--radius); padding: 16px 22px;
+      margin-bottom: 20px;
+    }
+    .officer-bar-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, #1a3c6e, #2563eb);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1rem; flex-shrink: 0;
+    }
+    .officer-bar-info .name  { font-weight: 800; font-size: 0.95rem; color: var(--text-primary); }
+    .officer-bar-info .meta  { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+    .officer-bar-back { margin-left: auto; }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      background: #1a3c6e; color: #fff; padding: 14px 20px;
+      border-radius: 12px; font-weight: 600; font-size: 0.9rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      transform: translateY(80px); opacity: 0; transition: transform 0.3s,opacity 0.3s;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"  class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+      <a href="complaints.html" class="sidebar-link"><span class="icon">📋</span> Complaints</a>
+      <a href="officers.html"   class="sidebar-link active"><span class="icon">👮</span> Officers</a>
+      <a href="citizens.html"   class="sidebar-link"><span class="icon">👥</span> Citizens</a>
+      <a href="departments.html" class="sidebar-link"><span class="icon">🏢</span> Departments</a>
+      <a href="hierarchy.html"  class="sidebar-link"><span class="icon">🏗️</span> Hierarchy</a>
+    </nav>
+</aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Officer Cases</h1>
+        <span class="breadcrumb" id="breadcrumb">Loading…</span>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+        <div class="admin-profile" id="admin-profile" onclick="document.getElementById('profile-dropdown').classList.toggle('show')">
+          <div class="admin-avatar" id="admin-avatar">AD</div>
+          <div class="admin-info"><div class="name" id="admin-name">Admin User</div><div class="role">Administrator</div></div>
+          <div class="profile-dropdown" id="profile-dropdown">
+            <a href="profile.html">👤 My Profile</a>
+            <a href="../login.html" onclick="doLogout(event)">🚪 Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- Officer mini bar -->
+      <div class="officer-bar" id="officer-bar" style="display:none;">
+        <div class="officer-bar-avatar" id="bar-avatar">?</div>
+        <div class="officer-bar-info">
+          <div class="name" id="bar-name">Loading…</div>
+          <div class="meta" id="bar-meta"></div>
+        </div>
+        <a id="bar-back" href="#" class="btn btn-outline btn-sm officer-bar-back">← Back to Profile</a>
+      </div>
+
+      <!-- Filter tabs -->
+      <div class="filter-tabs" id="filter-tabs" style="display:none;">
+        <button class="filter-tab" data-filter="all"       onclick="setFilter('all')">All Cases <span class="count" id="cnt-all">0</span></button>
+        <button class="filter-tab" data-filter="assigned"  onclick="setFilter('assigned')">Assigned <span class="count" id="cnt-assigned">0</span></button>
+        <button class="filter-tab" data-filter="pending"   onclick="setFilter('pending')">Result Pending <span class="count" id="cnt-pending">0</span></button>
+        <button class="filter-tab" data-filter="in_progress" onclick="setFilter('in_progress')">In Progress <span class="count" id="cnt-inprogress">0</span></button>
+        <button class="filter-tab" data-filter="resolved"  onclick="setFilter('resolved')">Resolved <span class="count" id="cnt-resolved">0</span></button>
+      </div>
+
+      <!-- Table card -->
+      <div class="section-card" id="table-card" style="display:none;">
+        <div class="section-card-header">
+          <h3 id="table-title">Cases (0)</h3>
+          <div class="search-box">
+            <span>🔍</span>
+            <input type="text" id="search-input" placeholder="Search by ID or title…" oninput="renderTable()" />
+          </div>
+        </div>
+        <div class="section-card-body">
+          <table class="data-table" id="cases-table">
+            <thead>
+              <tr>
+                <th>Complaint ID</th>
+                <th>Title</th>
+                <th>Department</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Assigned On</th>
+                <th>Citizen</th>
+              </tr>
+            </thead>
+            <tbody id="cases-body"></tbody>
+          </table>
+          <div id="empty-msg" style="display:none;text-align:center;padding:48px 20px;">
+            <div style="font-size:3rem;margin-bottom:12px;">📋</div>
+            <div style="font-weight:700;color:var(--text-primary);">No cases found</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;margin-top:6px;">Try a different filter</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="loading-msg" style="text-align:center;padding:80px 20px;color:var(--text-secondary);">Loading cases…</div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="theme.js"></script>
+<script src="admin-auth.js"></script>
+<script>
+
+  var params    = new URLSearchParams(window.location.search);
+  var officerId = params.get('id');
+  var initFilter = params.get('filter') || 'all';
+
+  var allComplaints = [];
+  var activeFilter  = initFilter;
+
+  // ── Helpers ────────────────────────────────────────────────────
+  function statusBadge(s) {
+    var cls   = { pending:'pending', assigned:'in-progress', in_progress:'in-progress', resolved:'resolved', rejected:'rejected' };
+    var label = { pending:'Pending', assigned:'Assigned', in_progress:'In Progress', resolved:'Resolved', rejected:'Rejected' };
+    return '<span class="status-badge ' + (cls[s]||s) + '">' + (label[s]||s) + '</span>';
+  }
+
+  function severityBadge(s) {
+    return '<span class="priority-badge ' + s + '">' + s.charAt(0).toUpperCase() + s.slice(1) + '</span>';
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function initials(name) {
+    return (name||'').split(' ').filter(Boolean).map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase()||'?';
+  }
+
+  // ── Filter logic ───────────────────────────────────────────────
+  function filterComplaints(filter) {
+    if (filter === 'all')        return allComplaints;
+    if (filter === 'pending')    return allComplaints.filter(function(c){ return c.status === 'assigned' || c.status === 'in_progress'; });
+    if (filter === 'in_progress')return allComplaints.filter(function(c){ return c.status === 'in_progress'; });
+    if (filter === 'assigned')   return allComplaints.filter(function(c){ return c.status === 'assigned'; });
+    if (filter === 'resolved')   return allComplaints.filter(function(c){ return c.status === 'resolved'; });
+    return allComplaints;
+  }
+
+  // ── Set active filter tab ──────────────────────────────────────
+  function setFilter(filter) {
+    activeFilter = filter;
+    document.querySelectorAll('.filter-tab').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.filter === filter);
+    });
+    renderTable();
+  }
+
+  // ── Update counts on all tabs ──────────────────────────────────
+  function updateCounts() {
+    document.getElementById('cnt-all').textContent        = allComplaints.length;
+    document.getElementById('cnt-assigned').textContent   = allComplaints.filter(function(c){ return c.status === 'assigned'; }).length;
+    document.getElementById('cnt-pending').textContent    = allComplaints.filter(function(c){ return c.status === 'assigned' || c.status === 'in_progress'; }).length;
+    document.getElementById('cnt-inprogress').textContent = allComplaints.filter(function(c){ return c.status === 'in_progress'; }).length;
+    document.getElementById('cnt-resolved').textContent   = allComplaints.filter(function(c){ return c.status === 'resolved'; }).length;
+  }
+
+  // ── Render table ───────────────────────────────────────────────
+  function renderTable() {
+    var q    = document.getElementById('search-input').value.toLowerCase().trim();
+    var data = filterComplaints(activeFilter);
+
+    if (q) {
+      data = data.filter(function(c){
+        return (c.complaintId||'').toLowerCase().includes(q) || (c.title||'').toLowerCase().includes(q);
+      });
+    }
+
+    document.getElementById('table-title').textContent = 'Cases (' + data.length + ')';
+
+    if (!data.length) {
+      document.getElementById('cases-table').style.display = 'none';
+      document.getElementById('empty-msg').style.display   = 'block';
+      return;
+    }
+
+    document.getElementById('cases-table').style.display = 'table';
+    document.getElementById('empty-msg').style.display   = 'none';
+
+    document.getElementById('cases-body').innerHTML = data.map(function(c){
+      var citizen = c.citizenId ? c.citizenId.name : '—';
+      return '<tr style="cursor:pointer;" onclick="window.location.href=\'complaint-detail.html?id=' + c._id + '\'">' +
+        '<td><strong>' + (c.complaintId||'—') + '</strong></td>' +
+        '<td>' + c.title + '</td>' +
+        '<td>' + (c.department||'—') + '</td>' +
+        '<td>' + severityBadge(c.severity||'medium') + '</td>' +
+        '<td>' + statusBadge(c.status) + '</td>' +
+        '<td>' + fmtDate(c.assignedAt) + '</td>' +
+        '<td>' + citizen + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  // ── Init ───────────────────────────────────────────────────────
+  async function init() {
+    if (!officerId) {
+      document.getElementById('loading-msg').innerHTML = '<h2>No officer specified.</h2><a href="officers.html" class="btn btn-primary" style="margin-top:16px;">Back to Officers</a>';
+      return;
+    }
+
+    try {
+      // Load officer info + complaints in parallel
+      var results = await Promise.all([
+        fetch('/api/officers/' + officerId),
+        fetch('/api/officers/' + officerId + '/complaints')
+      ]);
+
+      var officer    = await results[0].json();
+      allComplaints  = await results[1].json();
+
+      if (!results[0].ok) throw new Error(officer.message || 'Officer not found');
+
+      // Populate officer bar
+      document.getElementById('bar-avatar').textContent = initials(officer.name);
+      document.getElementById('bar-name').textContent   = officer.name;
+      document.getElementById('bar-meta').textContent   = officer.officerId + ' · ' + (officer.departmentName||'—') + ' · ' + officer.designation;
+      document.getElementById('bar-back').href          = 'officer-detail.html?id=' + officerId;
+      document.getElementById('officer-bar').style.display = '';
+
+      // Breadcrumb
+      document.getElementById('breadcrumb').textContent = officer.name + ' — Cases';
+
+      // Update counts + show UI
+      updateCounts();
+      document.getElementById('filter-tabs').style.display = '';
+      document.getElementById('table-card').style.display  = '';
+      document.getElementById('loading-msg').style.display = 'none';
+
+      // Apply initial filter from URL
+      setFilter(initFilter);
+
+    } catch(err) {
+      document.getElementById('loading-msg').innerHTML =
+        '<div style="font-size:3rem;margin-bottom:16px;">❌</div><h2>Failed to Load</h2>' +
+        '<p style="color:var(--text-secondary);">' + err.message + '</p>' +
+        '<a href="officers.html" class="btn btn-primary" style="margin-top:16px;">Back to Officers</a>';
+    }
+  }
+
+  document.addEventListener('click', function(e) {
+    var p = document.getElementById('admin-profile');
+    if (p && !p.contains(e.target)) document.getElementById('profile-dropdown').classList.remove('show');
+  });
+
+  init();
+
+</script>
+</body>
+</html>

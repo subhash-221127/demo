@@ -1,0 +1,307 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix Admin – Officers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="admin.css" />
+  <style>
+    .modal-overlay { display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.45); align-items:center; justify-content:center; }
+    .modal-overlay.show { display:flex; }
+    .modal { background:var(--bg-card,#fff); border-radius:20px; padding:32px; width:100%; max-width:500px; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+    .modal h3 { font-size:1.2rem; font-weight:800; color:var(--text-primary); margin-bottom:20px; }
+    .modal-field { margin-bottom:16px; }
+    .modal-field label { display:block; font-size:0.8rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em; }
+    .modal-field input, .modal-field select { width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid var(--border,#e2e8f0); background:var(--bg-input,#f8fafc); color:var(--text-primary); font-size:0.9rem; font-family:inherit; outline:none; box-sizing:border-box; }
+    .modal-field input:focus, .modal-field select:focus { border-color:#1a3c6e; }
+    .modal-actions { display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
+    .toast { position:fixed; bottom:24px; right:24px; z-index:9999; background:#1a3c6e; color:#fff; padding:14px 20px; border-radius:12px; font-weight:600; font-size:0.9rem; box-shadow:0 8px 24px rgba(0,0,0,0.2); transform:translateY(80px); opacity:0; transition:transform 0.3s,opacity 0.3s; }
+    .toast.show    { transform:translateY(0); opacity:1; }
+    .toast.success { background:#16a34a; }
+    .toast.error   { background:#dc2626; }
+    .data-table tbody tr { cursor:pointer; }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"  class="sidebar-link"><span class="icon">&#128202;</span> Dashboard</a>
+      <a href="complaints.html" class="sidebar-link"><span class="icon">&#128203;</span> Complaints</a>
+      <a href="officers.html"   class="sidebar-link active"><span class="icon">&#128110;</span> Officers</a>
+      <a href="citizens.html"   class="sidebar-link"><span class="icon">&#128101;</span> Citizens</a>
+      <a href="departments.html" class="sidebar-link"><span class="icon">&#127970;</span> Departments</a>
+      <a href="hierarchy.html"  class="sidebar-link"><span class="icon">🏗️</span> Hierarchy</a>
+    </nav>
+</aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Officers</h1>
+        <span class="breadcrumb">Officer Management</span>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">&#127769;</span></button>
+        <div class="admin-profile" id="admin-profile" onclick="document.getElementById('profile-dropdown').classList.toggle('show')">
+          <div class="admin-avatar" id="admin-avatar">AD</div>
+          <div class="admin-info"><div class="name" id="admin-name">Admin User</div><div class="role">Administrator</div></div>
+          <div class="profile-dropdown" id="profile-dropdown">
+            <a href="profile.html">&#128100; My Profile</a>
+            <a href="../login.html" onclick="doLogout(event)">&#128682; Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <div class="filter-bar">
+        <label>Status:</label>
+        <select id="status-filter" onchange="applyFilters()">
+          <option value="all">All Status</option>
+          <option value="Active">Active</option>
+          <option value="On Leave">On Leave</option>
+        </select>
+        <label>Department:</label>
+        <select id="dept-filter" onchange="applyFilters()">
+          <option value="all">All Departments</option>
+        </select>
+        <div class="search-box" style="margin-left:auto;">
+          <span>&#128269;</span>
+          <input type="text" id="search-input" placeholder="Search by name, ID or email..." oninput="applyFilters()" />
+        </div>
+      </div>
+
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card blue"><div class="stat-card-header"><div class="stat-card-icon blue">&#128110;</div></div><div class="stat-value" id="total-count">...</div><div class="stat-label">Total Officers</div></div>
+        <div class="stat-card green"><div class="stat-card-header"><div class="stat-card-icon green">&#10003;</div></div><div class="stat-value" id="active-count">...</div><div class="stat-label">Active</div></div>
+        <div class="stat-card orange"><div class="stat-card-header"><div class="stat-card-icon orange">&#9200;</div></div><div class="stat-value" id="inactive-count">...</div><div class="stat-label">On Leave</div></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-card-header">
+          <h3 id="officers-count">Officers (0)</h3>
+          <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Officer</button>
+        </div>
+        <div class="section-card-body">
+          <div id="loading-msg" style="text-align:center;padding:40px;color:var(--text-secondary);">Loading officers...</div>
+          <table class="data-table" id="officers-table" style="display:none;">
+            <thead>
+              <tr><th>ID</th><th>Name</th><th>Department</th><th>Designation</th><th>Status</th><th>Assigned</th><th>Resolved</th></tr>
+            </thead>
+            <tbody id="officers-body"></tbody>
+          </table>
+          <div id="empty-msg" style="display:none;text-align:center;padding:48px 20px;">
+            <div style="font-size:3rem;margin-bottom:12px;">&#128269;</div>
+            <div style="font-weight:700;color:var(--text-primary);">No officers found</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Officer Modal -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <h3>Add New Officer</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+      <div class="modal-field"><label>Full Name *</label><input type="text" id="f-name" placeholder="Rajesh Kumar" /></div>
+      <div class="modal-field"><label>Email *</label><input type="email" id="f-email" placeholder="rajesh@cityfix.gov.in" /></div>
+      <div class="modal-field"><label>Phone *</label><input type="text" id="f-phone" placeholder="9876543210" /></div>
+      <div class="modal-field"><label>Designation *</label><input type="text" id="f-designation" placeholder="Field Officer" /></div>
+      <div class="modal-field"><label>Department *</label><select id="f-department"><option value="">-- Select --</option></select></div>
+      <div class="modal-field"><label>Join Date *</label><input type="text" id="f-joindate" placeholder="Mar 21, 2026" /></div>
+      <div class="modal-field"><label>Password *</label><input type="password" id="f-password" placeholder="Min. 8 characters" /></div>
+      <div class="modal-field"><label>Confirm Password *</label><input type="password" id="f-confirm" placeholder="Re-enter password" /></div>
+      <div class="modal-field" style="grid-column:1/-1;">
+        <label>Officer Level (Hierarchy) *</label>
+        <select id="f-level">
+          <option value="1">Level 1 — Field Officer (Junior)</option>
+          <option value="2">Level 2 — Senior Officer (Escalation)</option>
+          <option value="3">Level 3 — Director / Department Head</option>
+        </select>
+      </div>
+    </div>
+    <p style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">A welcome email with login credentials will be sent to the officer.</p>
+    <div id="modal-error" style="display:none;color:#dc2626;font-size:0.85rem;margin-top:8px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="add-btn" onclick="addOfficer()">Add Officer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="theme.js"></script>
+<script src="admin-auth.js"></script>
+<script>
+  let allOfficers = [];
+  let departments = [];
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + (type || 'success');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  function statusBadge(s) {
+    const cls = { 'Active':'active', 'On Leave':'warning' };
+    return '<span class="status-badge ' + (cls[s] || 'pending') + '">' + s + '</span>';
+  }
+
+  function goToOfficer(id) {
+    window.location.href = 'officer-detail.html?id=' + id;
+  }
+
+  function applyFilters() {
+    const sf = document.getElementById('status-filter').value;
+    const df = document.getElementById('dept-filter').value;
+    const q  = document.getElementById('search-input').value.toLowerCase().trim();
+
+    let data = allOfficers.filter(o => {
+      if (sf !== 'all' && o.status !== sf) return false;
+      if (df !== 'all' && o.departmentName !== df) return false;
+      if (q && !o.name.toLowerCase().includes(q) &&
+               !(o.officerId||'').toLowerCase().includes(q) &&
+               !(o.email||'').toLowerCase().includes(q)) return false;
+      return true;
+    });
+
+    document.getElementById('total-count').textContent    = allOfficers.length;
+    document.getElementById('active-count').textContent   = allOfficers.filter(o => o.status === 'Active').length;
+    document.getElementById('inactive-count').textContent = allOfficers.filter(o => o.status === 'On Leave').length;
+    document.getElementById('officers-count').textContent = 'Officers (' + data.length + ')';
+
+    if (!data.length) {
+      document.getElementById('officers-table').style.display = 'none';
+      document.getElementById('empty-msg').style.display = 'block';
+      return;
+    }
+    document.getElementById('empty-msg').style.display = 'none';
+    document.getElementById('officers-table').style.display = 'table';
+    document.getElementById('officers-body').innerHTML = data.map(o =>
+      '<tr data-id="' + o.officerId + '" class="officer-row">' +
+        '<td><strong>' + o.officerId + '</strong></td>' +
+        '<td>' + o.name + '</td>' +
+        '<td>' + (o.departmentName || '--') + '</td>' +
+        '<td>' + o.designation + '</td>' +
+        '<td>' + statusBadge(o.status) + '</td>' +
+        '<td>' + o.casesHandled + '</td>' +
+        '<td>' + o.casesResolved + '</td>' +
+      '</tr>'
+    ).join('');
+  }
+
+  function openAddModal() {
+    document.getElementById('add-modal').classList.add('show');
+    document.getElementById('modal-error').style.display = 'none';
+    ['f-name','f-email','f-phone','f-designation','f-password','f-confirm'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('f-department').value = '';
+    const today  = new Date();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    document.getElementById('f-joindate').value = months[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
+  }
+
+  function closeAddModal() { document.getElementById('add-modal').classList.remove('show'); }
+
+  async function addOfficer() {
+    const name        = document.getElementById('f-name').value.trim();
+    const email       = document.getElementById('f-email').value.trim();
+    const phone       = document.getElementById('f-phone').value.trim();
+    const designation = document.getElementById('f-designation').value.trim();
+    const department  = document.getElementById('f-department').value;
+    const joinDate    = document.getElementById('f-joindate').value.trim();
+    const password    = document.getElementById('f-password').value;
+    const confirm     = document.getElementById('f-confirm').value;
+    const errEl       = document.getElementById('modal-error');
+
+    if (!name || !email || !phone || !designation || !department || !joinDate || !password || !confirm) {
+      errEl.textContent = 'All fields are required.'; errEl.style.display = 'block'; return;
+    }
+    if (password.length < 8) {
+      errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return;
+    }
+    if (password !== confirm) {
+      errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return;
+    }
+
+    const btn = document.getElementById('add-btn');
+    btn.disabled = true; btn.textContent = 'Adding...';
+    errEl.style.display = 'none';
+
+    try {
+      const res  = await fetch('/api/officers', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, phone, designation, department, joinDate, password, level: document.getElementById('f-level').value || 1 })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        closeAddModal();
+        showToast(name + ' added! Welcome email sent.', 'success');
+        loadOfficers();
+      } else {
+        errEl.textContent = data.message || 'Failed to add officer.';
+        errEl.style.display = 'block';
+      }
+    } catch {
+      errEl.textContent = 'Cannot connect to server.'; errEl.style.display = 'block';
+    }
+    btn.disabled = false; btn.textContent = 'Add Officer';
+  }
+
+  async function loadOfficers() {
+    try {
+      const res   = await fetch('/api/officers');
+      allOfficers = await res.json();
+      document.getElementById('loading-msg').style.display = 'none';
+      applyFilters();
+    } catch { document.getElementById('loading-msg').textContent = 'Failed to load officers.'; }
+  }
+
+  async function loadDepartments() {
+    try {
+      const res   = await fetch('/api/departments');
+      departments = await res.json();
+      const df = document.getElementById('dept-filter');
+      const mf = document.getElementById('f-department');
+      departments.forEach(d => {
+        const o1 = document.createElement('option'); o1.value = d.name; o1.textContent = d.name; df.appendChild(o1);
+        const o2 = document.createElement('option'); o2.value = d._id;  o2.textContent = d.name; mf.appendChild(o2);
+      });
+    } catch { console.error('Failed to load departments'); }
+  }
+
+  document.getElementById('add-modal').addEventListener('click', function(e) { if (e.target === this) closeAddModal(); });
+
+  // Row click via delegation — avoids inline onclick quote issues
+  document.getElementById('officers-body').addEventListener('click', function(e) {
+    const row = e.target.closest('tr[data-id]');
+    if (row) window.location.href = 'officer-detail.html?id=' + row.dataset.id;
+  });
+  document.addEventListener('click', e => {
+    const p = document.getElementById('admin-profile');
+    if (p && !p.contains(e.target)) document.getElementById('profile-dropdown').classList.remove('show');
+  });
+
+  loadDepartments();
+  loadOfficers();
+</script>
+</body>
+</html>

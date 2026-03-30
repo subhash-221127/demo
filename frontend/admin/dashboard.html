@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix Admin – Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"  class="sidebar-link active"><span class="icon">📊</span> Dashboard</a>
+      <a href="complaints.html" class="sidebar-link"><span class="icon">📋</span> Complaints <span class="badge" id="pending-badge">0</span></a>
+      <a href="officers.html"   class="sidebar-link"><span class="icon">👮</span> Officers</a>
+      <a href="citizens.html"   class="sidebar-link"><span class="icon">👥</span> Citizens</a>
+      <a href="departments.html" class="sidebar-link"><span class="icon">🏢</span> Departments</a>
+      <a href="hierarchy.html"  class="sidebar-link"><span class="icon">🏗️</span> Hierarchy</a>
+    </nav>
+</aside>
+
+  <!-- ── MAIN ── -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-sub">Overview &amp; Analytics</p>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+        <div class="admin-profile" id="admin-profile" onclick="toggleProfileMenu()">
+          <div class="admin-avatar" id="admin-avatar">AD</div>
+          <div class="admin-info">
+            <div class="name" id="admin-name">Admin User</div>
+            <div class="role">Administrator</div>
+          </div>
+          <div class="profile-dropdown" id="profile-dropdown">
+            <a href="profile.html" onclick="event.stopPropagation()">👤 My Profile</a>
+            <a href="../login.html" onclick="event.stopPropagation();doLogout(event)">🚪 Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- Stat cards — loaded from DB -->
+      <div class="stats-grid" id="stats-grid">
+        <!-- Loading skeletons -->
+        <div class="stat-card blue"><div class="stat-value">…</div><div class="stat-label">Total Complaints</div></div>
+        <div class="stat-card orange"><div class="stat-value">…</div><div class="stat-label">Pending</div></div>
+        <div class="stat-card purple"><div class="stat-value">…</div><div class="stat-label">In Progress</div></div>
+        <div class="stat-card green"><div class="stat-value">…</div><div class="stat-label">Resolved</div></div>
+        <div class="stat-card red"><div class="stat-value">…</div><div class="stat-label">Rejected</div></div>
+        <div class="stat-card blue"><div class="stat-value">…</div><div class="stat-label">Citizens</div></div>
+        <div class="stat-card purple"><div class="stat-value">…</div><div class="stat-label">Officers</div></div>
+      </div>
+
+      <!-- Today's Complaints -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <h3>📋 Today's Complaints <span id="today-count" style="font-size:0.85rem;color:var(--text-secondary);font-weight:600;"></span></h3>
+          <a href="complaints.html" class="btn btn-outline btn-sm">View All Complaints</a>
+        </div>
+        <div class="section-card-body">
+          <div id="today-loading" style="text-align:center;padding:32px;color:var(--text-secondary);">Loading…</div>
+          <table class="data-table" id="today-table" style="display:none;">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Citizen</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Severity</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="today-body"></tbody>
+          </table>
+          <div id="today-empty" style="display:none;text-align:center;padding:40px 20px;">
+            <div style="font-size:2.5rem;margin-bottom:12px;">🎉</div>
+            <div style="font-weight:700;color:var(--text-primary);">No complaints filed today!</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;margin-top:6px;">All is well in the city today.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="theme.js"></script>
+<script src="admin-auth.js"></script>
+<script>
+
+  function toggleProfileMenu() {
+    document.getElementById('profile-dropdown').classList.toggle('show');
+  }
+  document.addEventListener('click', e => {
+    const profile = document.getElementById('admin-profile');
+    if (profile && !profile.contains(e.target))
+      document.getElementById('profile-dropdown').classList.remove('show');
+  });
+
+  // ── Status / severity helpers ──────────────────────────────────
+  function statusBadge(status) {
+    const map = { pending:'pending', assigned:'in-progress', in_progress:'in-progress', resolved:'resolved', rejected:'rejected' };
+    const label = { pending:'Pending', assigned:'Assigned', in_progress:'In Progress', resolved:'Resolved', rejected:'Rejected' };
+    return `<span class="status-badge ${map[status] || status}">${label[status] || status}</span>`;
+  }
+  function severityBadge(sev) {
+    return `<span class="priority-badge ${sev}">${sev.charAt(0).toUpperCase()+sev.slice(1)}</span>`;
+  }
+  function fmtTime(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
+  }
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  // ── Load stats ─────────────────────────────────────────────────
+  async function loadStats() {
+    try {
+      const res  = await fetch('/api/admin/stats');
+      const data = await res.json();
+
+      document.getElementById('stats-grid').innerHTML = `
+        <div class="stat-card blue">
+          <div class="stat-card-header"><div class="stat-card-icon blue">📋</div></div>
+          <div class="stat-value">${data.total}</div>
+          <div class="stat-label">Total Complaints</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-card-header"><div class="stat-card-icon orange">⏳</div></div>
+          <div class="stat-value">${data.pending}</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-card-header"><div class="stat-card-icon purple">🔄</div></div>
+          <div class="stat-value">${data.inProgress}</div>
+          <div class="stat-label">In Progress</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-card-header"><div class="stat-card-icon green">✅</div></div>
+          <div class="stat-value">${data.resolved}</div>
+          <div class="stat-label">Resolved</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-card-header"><div class="stat-card-icon red">❌</div></div>
+          <div class="stat-value">${data.rejected}</div>
+          <div class="stat-label">Rejected</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-card-header"><div class="stat-card-icon blue">👥</div></div>
+          <div class="stat-value">${data.citizens}</div>
+          <div class="stat-label">Citizens</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-card-header"><div class="stat-card-icon purple">👮</div></div>
+          <div class="stat-value">${data.officers}</div>
+          <div class="stat-label">Officers</div>
+        </div>`;
+
+      // Update sidebar pending badge
+      document.getElementById('pending-badge').textContent = data.pending;
+
+    } catch (err) {
+      document.getElementById('stats-grid').innerHTML =
+        '<p style="color:#ef4444;padding:16px;">Failed to load stats. Is the backend running?</p>';
+    }
+  }
+
+  // ── Load today's complaints ────────────────────────────────────
+  async function loadToday() {
+    try {
+      const res  = await fetch('/api/admin/complaints/today');
+      const data = await res.json();
+
+      document.getElementById('today-loading').style.display = 'none';
+
+      if (!data.length) {
+        document.getElementById('today-empty').style.display = 'block';
+        document.getElementById('today-count').textContent = '(0)';
+        return;
+      }
+
+      document.getElementById('today-count').textContent = `(${data.length})`;
+      document.getElementById('today-table').style.display = 'table';
+      document.getElementById('today-body').innerHTML = data.map(c => `
+        <tr style="cursor:pointer;" onclick="window.location.href='complaint-detail.html?id=${c._id}'">
+          <td><strong>${c.complaintId || '—'}</strong></td>
+          <td>${c.title}</td>
+          <td>${c.citizenId ? c.citizenId.name : '—'}</td>
+          <td>${c.department}</td>
+          <td>${statusBadge(c.status)}</td>
+          <td>${severityBadge(c.severity)}</td>
+          <td>${fmtTime(c.createdAt)}</td>
+        </tr>`).join('');
+
+    } catch (err) {
+      document.getElementById('today-loading').textContent = 'Failed to load today\'s complaints.';
+    }
+  }
+
+  // ── Init ───────────────────────────────────────────────────────
+  loadStats();
+  loadToday();
+
+</script>
+</body>
+</html>

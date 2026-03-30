@@ -1,0 +1,314 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix Admin – Officer Detail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="admin.css" />
+  <style>
+    .officer-hero { background:var(--card); border:1px solid var(--card-border); border-radius:var(--radius); padding:0; margin-bottom:24px; overflow:hidden; }
+    .hero-banner  { height:80px; background:linear-gradient(135deg,#0f2346 0%,#1a3c6e 50%,#f97316 100%); }
+    .hero-body    { padding:0 32px 28px; display:flex; align-items:flex-end; gap:20px; }
+    .officer-avatar-lg {
+      width:88px; height:88px; border-radius:50%;
+      background:linear-gradient(135deg,#1a3c6e,#2563eb);
+      color:#fff; display:flex; align-items:center; justify-content:center;
+      font-size:2rem; font-weight:800; border:4px solid var(--card);
+      margin-top:-44px; flex-shrink:0; box-shadow:0 8px 24px rgba(26,60,110,0.25);
+    }
+    .hero-info { padding-top:12px; flex:1; }
+    .hero-info h2 { font-size:1.5rem; font-weight:900; color:var(--text-primary); margin-bottom:4px; }
+    .hero-info .desig { font-size:0.9rem; color:var(--text-secondary); font-weight:500; margin-bottom:10px; }
+    .hero-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .meta-chip {
+      display:inline-flex; align-items:center; gap:5px;
+      background:var(--input-bg); border:1px solid var(--card-border);
+      border-radius:20px; padding:4px 12px;
+      font-size:0.78rem; font-weight:600; color:var(--text-secondary);
+    }
+
+    /* ── Clickable Perf cards ──────────────────────────────────── */
+    .perf-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+    .perf-card {
+      background:var(--card); border:1px solid var(--card-border);
+      border-radius:var(--radius); padding:20px 22px;
+      position:relative; overflow:hidden;
+      cursor:pointer; text-decoration:none; display:block;
+      transition:transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+    .perf-card:hover {
+      transform:translateY(-3px);
+      box-shadow:0 10px 30px rgba(0,0,0,0.1);
+      border-color:var(--accent, #1a3c6e);
+    }
+    .perf-card::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+    .perf-card.blue::after   { background:#3b82f6; }
+    .perf-card.orange::after { background:#f97316; }
+    .perf-card.green::after  { background:#22c55e; }
+    .perf-card.purple::after { background:#8b5cf6; }
+    .perf-click-hint {
+      position:absolute; top:10px; right:12px;
+      font-size:0.68rem; font-weight:600; color:var(--text-secondary);
+      opacity:0; transition:opacity 0.2s;
+    }
+    .perf-card:hover .perf-click-hint { opacity:1; }
+    .perf-icon {
+      width:38px; height:38px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1rem; margin-bottom:14px;
+    }
+    .perf-icon.blue   { background:rgba(59,130,246,0.1);  color:#3b82f6; }
+    .perf-icon.orange { background:rgba(249,115,22,0.1);  color:#f97316; }
+    .perf-icon.green  { background:rgba(34,197,94,0.1);   color:#22c55e; }
+    .perf-icon.purple { background:rgba(139,92,246,0.1);  color:#8b5cf6; }
+    .perf-val { font-size:2rem; font-weight:900; color:var(--text-primary); line-height:1; margin-bottom:4px; }
+    .perf-val.blue   { color:#3b82f6; }
+    .perf-val.orange { color:#f97316; }
+    .perf-val.green  { color:#22c55e; }
+    .perf-val.purple { color:#8b5cf6; }
+    .perf-lbl { font-size:0.78rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.06em; }
+    .perf-sub { font-size:0.75rem; color:var(--text-secondary); margin-top:6px; line-height:1.4; }
+    .rate-bar-wrap { margin-top:10px; }
+    .rate-bar-bg   { height:5px; background:var(--card-border); border-radius:99px; overflow:hidden; }
+    .rate-bar-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,#8b5cf6,#6366f1); }
+
+    .info-section  { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+    .danger-zone {
+      background:#fff1f2; border:1.5px solid #fda4af; border-radius:var(--radius);
+      padding:22px 26px; display:flex; align-items:center;
+      justify-content:space-between; gap:20px; flex-wrap:wrap;
+    }
+    .danger-text h4 { color:#be123c; font-size:0.95rem; margin-bottom:4px; }
+    .danger-text p  { font-size:0.83rem; color:var(--text-secondary); margin:0; }
+
+    .toast {
+      position:fixed; bottom:24px; right:24px; z-index:9999;
+      background:#1a3c6e; color:#fff; padding:14px 20px;
+      border-radius:12px; font-weight:600; font-size:0.9rem;
+      box-shadow:0 8px 24px rgba(0,0,0,0.2);
+      transform:translateY(80px); opacity:0; transition:transform 0.3s,opacity 0.3s;
+    }
+    .toast.show { transform:translateY(0); opacity:1; }
+    .toast.success { background:#16a34a; }
+    .toast.error   { background:#dc2626; }
+
+    @media(max-width:900px) {
+      .perf-grid   { grid-template-columns:repeat(2,1fr); }
+      .info-section { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"  class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+      <a href="complaints.html" class="sidebar-link"><span class="icon">📋</span> Complaints</a>
+      <a href="officers.html"   class="sidebar-link active"><span class="icon">👮</span> Officers</a>
+      <a href="citizens.html"   class="sidebar-link"><span class="icon">👥</span> Citizens</a>
+      <a href="departments.html" class="sidebar-link"><span class="icon">🏢</span> Departments</a>
+      <a href="hierarchy.html"  class="sidebar-link"><span class="icon">🏗️</span> Hierarchy</a>
+    </nav>
+</aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Officer Profile</h1>
+        <span class="breadcrumb" id="breadcrumb">Loading…</span>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+        <div class="admin-profile" id="admin-profile" onclick="document.getElementById('profile-dropdown').classList.toggle('show')">
+          <div class="admin-avatar" id="admin-avatar">AD</div>
+          <div class="admin-info"><div class="name" id="admin-name">Admin User</div><div class="role">Administrator</div></div>
+          <div class="profile-dropdown" id="profile-dropdown">
+            <a href="profile.html">👤 My Profile</a>
+            <a href="../login.html" onclick="doLogout(event)">🚪 Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div class="page-content" id="page-content">
+      <div style="text-align:center;padding:80px 20px;color:var(--text-secondary);">Loading officer…</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="theme.js"></script>
+<script src="admin-auth.js"></script>
+<script>
+  var officerId = new URLSearchParams(window.location.search).get('id');
+  var officer   = null;
+
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + (type || 'success');
+    setTimeout(function(){ t.classList.remove('show'); }, 3500);
+  }
+
+  function statusBadge(s) {
+    var cls = { 'Active':'active', 'On Leave':'warning' };
+    return '<span class="status-badge ' + (cls[s] || 'pending') + '">' + s + '</span>';
+  }
+
+  function initials(name) {
+    return (name||'').split(' ').filter(Boolean).map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase()||'?';
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function goToComplaints(filter) {
+    window.location.href = 'officer-complaints.html?id=' + officerId + '&filter=' + filter;
+  }
+
+  window.deleteOfficer = async function() {
+    if (!confirm('Permanently remove officer ' + officer.officerId + '?\nThis cannot be undone.')) return;
+    var btn = document.getElementById('remove-btn');
+    btn.disabled = true; btn.textContent = 'Removing…';
+    try {
+      var res  = await fetch('/api/officers/' + officer.officerId, { method:'DELETE' });
+      var data = await res.json();
+      if (res.ok) {
+        showToast('Officer removed.', 'success');
+        setTimeout(function(){ window.location.href = 'officers.html'; }, 1200);
+      } else {
+        showToast(data.message || 'Failed.', 'error');
+        btn.disabled = false; btn.textContent = 'Remove Officer';
+      }
+    } catch(e) {
+      showToast('Cannot connect to server.', 'error');
+      btn.disabled = false; btn.textContent = 'Remove Officer';
+    }
+  };
+
+  function renderPage() {
+    var o        = officer;
+    var assigned = o.casesHandled  || 0;
+    var resolved = o.casesResolved || 0;
+    var pending  = Math.max(0, assigned - resolved);
+    var rate     = assigned > 0 ? Math.round((resolved / assigned) * 100) : 0;
+
+    document.getElementById('breadcrumb').textContent = o.name + ' — ' + o.officerId;
+
+    document.getElementById('page-content').innerHTML =
+
+      '<a href="officers.html" class="btn btn-outline btn-sm" style="margin-bottom:20px;">← Back to Officers</a>' +
+
+      // Hero
+      '<div class="officer-hero">' +
+        '<div class="hero-banner"></div>' +
+        '<div class="hero-body">' +
+          '<div class="officer-avatar-lg">' + initials(o.name) + '</div>' +
+          '<div class="hero-info">' +
+            '<h2>' + o.name + '</h2>' +
+            '<div class="desig">' + o.designation + '</div>' +
+            '<div class="hero-meta">' +
+              statusBadge(o.status) +
+              '<span class="meta-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' + (o.departmentName||'—') + '</span>' +
+              '<span class="meta-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Joined ' + (o.joinDate||fmtDate(o.createdAt)) + '</span>' +
+              '<span class="meta-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' + o.officerId + '</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      // 4 clickable perf cards
+      '<div class="perf-grid">' +
+
+        '<div class="perf-card blue" onclick="goToComplaints(\'all\')" title="Click to view all cases">' +
+          '<span class="perf-click-hint">View all →</span>' +
+          '<div class="perf-icon blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>' +
+          '<div class="perf-val blue">' + assigned + '</div>' +
+          '<div class="perf-lbl">Cases Assigned</div>' +
+          '<div class="perf-sub">Total complaints ever assigned</div>' +
+        '</div>' +
+
+        '<div class="perf-card orange" onclick="goToComplaints(\'pending\')" title="Click to view pending cases">' +
+          '<span class="perf-click-hint">View pending →</span>' +
+          '<div class="perf-icon orange"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>' +
+          '<div class="perf-val orange">' + pending + '</div>' +
+          '<div class="perf-lbl">Result Pending</div>' +
+          '<div class="perf-sub">Assigned but not yet resolved</div>' +
+        '</div>' +
+
+        '<div class="perf-card green" onclick="goToComplaints(\'resolved\')" title="Click to view resolved cases">' +
+          '<span class="perf-click-hint">View resolved →</span>' +
+          '<div class="perf-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>' +
+          '<div class="perf-val green">' + resolved + '</div>' +
+          '<div class="perf-lbl">Resolved Cases</div>' +
+          '<div class="perf-sub">Successfully closed complaints</div>' +
+        '</div>' +
+
+        '<div class="perf-card purple" onclick="goToComplaints(\'all\')" title="Click to view all cases">' +
+          '<span class="perf-click-hint">View all →</span>' +
+          '<div class="perf-icon purple"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>' +
+          '<div class="perf-val purple">' + rate + '%</div>' +
+          '<div class="perf-lbl">Success Rate</div>' +
+          '<div class="rate-bar-wrap"><div class="rate-bar-bg"><div class="rate-bar-fill" style="width:' + rate + '%"></div></div></div>' +
+          '<div class="perf-sub">' + resolved + ' resolved of ' + assigned + ' assigned</div>' +
+        '</div>' +
+
+      '</div>' +
+
+      // Info cards
+      '<div class="info-section">' +
+        '<div class="info-card"><h4>📞 Contact Information</h4>' +
+          '<div class="info-row"><span class="info-label">Email</span><span class="info-value">' + (o.email||'—') + '</span></div>' +
+          '<div class="info-row"><span class="info-label">Phone</span><span class="info-value">' + (o.phone||'—') + '</span></div>' +
+        '</div>' +
+        '<div class="info-card"><h4>🏢 Employment Details</h4>' +
+          '<div class="info-row"><span class="info-label">Officer ID</span><span class="info-value" style="color:#2563eb;font-weight:800;">' + o.officerId + '</span></div>' +
+          '<div class="info-row"><span class="info-label">Department</span><span class="info-value">' + (o.departmentName||'—') + '</span></div>' +
+          '<div class="info-row"><span class="info-label">Designation</span><span class="info-value">' + o.designation + '</span></div>' +
+          '<div class="info-row"><span class="info-label">Join Date</span><span class="info-value">' + (o.joinDate||fmtDate(o.createdAt)) + '</span></div>' +
+          '<div class="info-row"><span class="info-label">Status</span><span class="info-value">' + statusBadge(o.status) + '</span></div>' +
+        '</div>' +
+      '</div>' +
+
+      // Danger zone
+      '<div class="danger-zone">' +
+        '<div class="danger-text"><h4>🗑 Remove Officer</h4><p>Permanently removes this officer. Assigned complaints remain in the database.</p></div>' +
+        '<button class="btn btn-danger" id="remove-btn" onclick="deleteOfficer()">Remove Officer</button>' +
+      '</div>';
+  }
+
+  async function init() {
+    if (!officerId) {
+      document.getElementById('page-content').innerHTML = '<div style="text-align:center;padding:80px 20px;"><h2>No Officer ID</h2><a href="officers.html" class="btn btn-primary" style="margin-top:16px;">← Back</a></div>';
+      return;
+    }
+    try {
+      var res = await fetch('/api/officers/' + officerId);
+      officer  = await res.json();
+      if (!res.ok) throw new Error(officer.message || 'Not found');
+      renderPage();
+    } catch(err) {
+      document.getElementById('page-content').innerHTML =
+        '<div style="text-align:center;padding:80px 20px;"><div style="font-size:4rem;margin-bottom:16px;">❌</div><h2>Failed to Load</h2><p style="color:var(--text-secondary);">' + err.message + '</p><a href="officers.html" class="btn btn-primary" style="margin-top:16px;">← Back</a></div>';
+    }
+  }
+
+  document.addEventListener('click', function(e) {
+    var p = document.getElementById('admin-profile');
+    if (p && !p.contains(e.target)) document.getElementById('profile-dropdown').classList.remove('show');
+  });
+
+  init();
+</script>
+</body>
+</html>
