@@ -9,7 +9,8 @@ const User             = require("../models/User");
 const Officer          = require("../models/Officer");
 const Admin            = require("../models/Admin");
 
-const JWT_SECRET       = process.env.JWT_SECRET || "cityfix_secret_key";
+const JWT_SECRET       = process.env.JWT_SECRET;
+if (!JWT_SECRET) throw new Error("JWT_SECRET environment variable is not set!");
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "133830687101-eb9ln27rrftt10dcstl698ldkr7djj7a.apps.googleusercontent.com";
 
 // ── OTP Stores ─────────────────────────────────────────────────
