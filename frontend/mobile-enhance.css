@@ -1,0 +1,197 @@
+/* ============================================================
+   CITYFIX — SHARED MOBILE & UI ENHANCEMENTS
+   Applied to: login, signup, index pages
+   ============================================================ */
+
+*, *::before, *::after { -webkit-tap-highlight-color: transparent; }
+
+/* Prevent iOS input zoom */
+input, select, textarea { font-size: 16px !important; touch-action: manipulation; }
+button { touch-action: manipulation; cursor: pointer; }
+
+/* Better form card on small screens */
+@media (max-width: 480px) {
+  .form-card {
+    border-radius: 20px !important;
+    padding: 24px 20px !important;
+  }
+  .right-panel {
+    padding: 16px !important;
+    align-items: flex-start !important;
+    padding-top: 24px !important;
+  }
+  .form-box {
+    max-width: 100% !important;
+  }
+  .form-title { font-size: 1.35rem !important; }
+  .submit-btn { font-size: 0.9rem !important; padding: 13px !important; }
+  .google-btn { padding: 12px !important; font-size: 0.88rem !important; }
+
+  /* OTP row: stack on very small phones */
+  .email-row {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  .send-otp-btn {
+    width: 100% !important;
+    height: 44px !important;
+  }
+  .otp-input-row {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .verify-btn {
+    width: 100% !important;
+    height: 44px !important;
+  }
+  .demo-fill {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+  .demo-chip {
+    font-size: 0.7rem !important;
+    padding: 7px 4px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .form-card { padding: 20px 16px !important; }
+  .demo-fill { grid-template-columns: 1fr !important; }
+}
+
+/* ============================================================
+   DASHBOARD PAGES — UI POLISH & RESPONSIVENESS
+   ============================================================ */
+
+/* Better scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+
+/* Smooth page transitions */
+.complaint-card, .stat-card, .info-card, .section-card, .action-card {
+  transition: box-shadow 0.22s ease, transform 0.22s ease !important;
+}
+.complaint-card:hover, .stat-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.10) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Better focus rings */
+input:focus, select:focus, textarea:focus, button:focus-visible {
+  outline: 2px solid rgba(249,115,22,0.5) !important;
+  outline-offset: 2px !important;
+}
+
+/* Sidebar scroll */
+.sidebar-nav {
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.sidebar-nav::-webkit-scrollbar { display: none; }
+
+/* Better table responsiveness */
+@media (max-width: 768px) {
+  /* Make tables scroll horizontally */
+  .table-wrap, .table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Stack header title and sub on mobile */
+  .header-left, .topbar-left {
+    flex-wrap: wrap;
+    gap: 4px !important;
+  }
+
+  /* Larger tap targets for links */
+  .sidebar-link {
+    padding: 13px 16px !important;
+    margin: 1px 8px !important;
+  }
+
+  /* Better spacing for stat cards */
+  .stat-val, .stat-value, .perf-value {
+    font-size: 1.5rem !important;
+  }
+
+  /* Make badges wrap nicely */
+  .complaint-tags, .badge-row {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  /* Full-width search on mobile */
+  .search-input, input[type="search"], .search-bar {
+    width: 100% !important;
+  }
+
+  /* Filter bar — horizontal scroll */
+  .filter-card, .filter-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Better modal backdrop */
+  .modal-overlay, #modal-overlay {
+    backdrop-filter: blur(3px) !important;
+  }
+
+  /* Pagination: compact */
+  .pagination {
+    gap: 4px !important;
+    flex-wrap: wrap !important;
+  }
+}
+
+/* Tablet improvements */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .stats-row, .stats-grid, .stat-cards {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .content, .page-content {
+    padding: 20px !important;
+  }
+}
+
+/* ── Landing page (index.html) responsive fixes ── */
+@media (max-width: 768px) {
+  .hero-title, h1 {
+    font-size: clamp(1.8rem, 8vw, 2.5rem) !important;
+    line-height: 1.2 !important;
+  }
+  .hero-actions, .cta-buttons {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  .hero-actions a, .cta-buttons a {
+    width: 100% !important;
+    text-align: center !important;
+  }
+  .features-grid, .how-it-works-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .nav-links { display: none; }
+}
+
+/* ── Forgotpassword page ── */
+@media (max-width: 480px) {
+  .forgot-card, .reset-card {
+    padding: 24px 18px !important;
+    border-radius: 18px !important;
+  }
+}
+
+/* ── Animations: fade-in on load ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.stat-card, .complaint-card, .info-card {
+  animation: fadeUp 0.4s ease both;
+}
+.stat-card:nth-child(1) { animation-delay: 0.05s; }
+.stat-card:nth-child(2) { animation-delay: 0.1s; }
+.stat-card:nth-child(3) { animation-delay: 0.15s; }
+.stat-card:nth-child(4) { animation-delay: 0.2s; }
