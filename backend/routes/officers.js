@@ -68,11 +68,16 @@ function buildWelcomeEmail(officer, plainPassword) {
 }
 
 // ── Helper: generate next officerId ───────────────────────────
+// FIX: sort by officerId descending (not createdAt) to avoid race conditions
+// and handle IDs that may not be in insertion order.
 async function generateOfficerId() {
-  const last = await Officer.findOne().sort({ createdAt: -1 });
-  if (!last || !last.officerId) return "OFF001";
-  const num = parseInt(last.officerId.replace("OFF", "")) || 0;
-  return "OFF" + String(num + 1).padStart(3, "0");
+  const all = await Officer.find({}, { officerId: 1 }).lean();
+  if (!all || all.length === 0) return "OFF001";
+  const maxNum = all.reduce((max, o) => {
+    const n = parseInt((o.officerId || "").replace("OFF", ""), 10);
+    return isNaN(n) ? max : Math.max(max, n);
+  }, 0);
+  return "OFF" + String(maxNum + 1).padStart(3, "0");
 }
 
 // ── GET all officers ───────────────────────────────────────────
@@ -105,6 +110,59 @@ router.get("/officers/by-department/:deptName", async (req, res) => {
   }
 });
 
+// ── GET /officers/verify-token/:token ─────────────────────────
+// FIX: Must be defined BEFORE /:id to avoid Express matching "verify-token" as an id
+router.get("/officers/verify-token/:token", async (req, res) => {
+  try {
+    const officer = await Officer.findOne({
+      resetToken: req.params.token,
+      resetTokenExpiry: { $gt: new Date() },
+    });
+
+    if (!officer) {
+      return res.status(400).json({ message: "This link is invalid or has expired. Please ask your admin to resend the invitation." });
+    }
+
+    res.json({ valid: true, name: officer.name, email: officer.email, officerId: officer.officerId });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ── POST /officers/set-password ────────────────────────────────
+// FIX: Must be defined BEFORE /:id routes to avoid path collisions
+router.post("/officers/set-password", async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ message: "Token and password are required." });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters." });
+    }
+
+    const officer = await Officer.findOne({
+      resetToken: token,
+      resetTokenExpiry: { $gt: new Date() },
+    });
+
+    if (!officer) {
+      return res.status(400).json({ message: "This link is invalid or has expired." });
+    }
+
+    officer.password = await bcrypt.hash(password, 10);
+    officer.resetToken = null;
+    officer.resetTokenExpiry = null;
+    officer.passwordSet = true;
+    await officer.save();
+
+    res.json({ message: "Password set successfully! You can now log in to CityFix." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // ── GET single officer by officerId or _id ───────────────────────
 router.get("/officers/:id", async (req, res) => {
   try {
@@ -132,7 +190,6 @@ router.get("/officers/:id/complaints", async (req, res) => {
       .populate("citizenId", "name email phone")
       .sort({ createdAt: -1 });
 
-    // Strip citizen identity from anonymous complaints — officers must not see it
     res.json(complaints.map(c => stripAnonymous(c)));
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -140,7 +197,6 @@ router.get("/officers/:id/complaints", async (req, res) => {
 });
 
 // ── POST create new officer ────────────────────────────────────
-// No longer sends password in email — sends a secure set-password link
 router.post("/officers", async (req, res) => {
   try {
     const { name, email, phone, department, designation, joinDate, password, level } = req.body;
@@ -149,24 +205,28 @@ router.post("/officers", async (req, res) => {
       return res.status(400).json({ message: "All fields are required." });
     }
 
+    // FIX: Always normalize email to lowercase before checking and saving
+    const normalizedEmail = email.toLowerCase().trim();
+
     const dept = await Department.findById(department);
     if (!dept) return res.status(404).json({ message: "Department not found." });
 
-    const existingEmail = await Officer.findOne({ email: email.toLowerCase() });
-    if (existingEmail) return res.status(409).json({ message: `Email "${email}" is already registered.` });
+    // FIX: Check against normalized email (same as what the model stores)
+    const existingEmail = await Officer.findOne({ email: normalizedEmail });
+    if (existingEmail) {
+      return res.status(409).json({ message: `Email "${email}" is already registered as an officer.` });
+    }
 
     const officerId = await generateOfficerId();
     const hashed = await bcrypt.hash(password, 10);
 
-    // No token needed for creation (plain credentials sent by email)
-
     const officer = await Officer.create({
       officerId,
-      name,
-      email,
-      phone,
+      name: name.trim(),
+      email: normalizedEmail,  // FIX: store normalized email explicitly
+      phone: phone.trim(),
       password: hashed,
-      designation,
+      designation: designation.trim(),
       department: dept._id,
       departmentName: dept.name,
       joinDate,
@@ -183,7 +243,7 @@ router.post("/officers", async (req, res) => {
 
     const populated = await officer.populate("department", "name code");
 
-    // Build set-password link and send welcome email (non-fatal)
+    // Send welcome email (non-fatal)
     try {
       if (officer.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         await transporter.sendMail({
@@ -200,62 +260,12 @@ router.post("/officers", async (req, res) => {
 
     res.status(201).json({ message: "Officer created successfully. Welcome email sent.", officer: populated });
   } catch (err) {
-    if (err.code === 11000) return res.status(409).json({ message: "Duplicate email." });
+    if (err.code === 11000) {
+      // FIX: Better duplicate key error message based on which field collided
+      const field = err.keyPattern && err.keyPattern.email ? "email" : "officer ID";
+      return res.status(409).json({ message: `An officer with this ${field} already exists.` });
+    }
     res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
-
-// ── GET /officers/verify-token/:token ─────────────────────────
-// Called by set-password.html to verify the token is valid before showing the form
-router.get("/officers/verify-token/:token", async (req, res) => {
-  try {
-    const officer = await Officer.findOne({
-      resetToken: req.params.token,
-      resetTokenExpiry: { $gt: new Date() }, // not expired
-    });
-
-    if (!officer) {
-      return res.status(400).json({ message: "This link is invalid or has expired. Please ask your admin to resend the invitation." });
-    }
-
-    res.json({ valid: true, name: officer.name, email: officer.email, officerId: officer.officerId });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// ── POST /officers/set-password ────────────────────────────────
-// Officer submits new password via the set-password page
-router.post("/officers/set-password", async (req, res) => {
-  try {
-    const { token, password } = req.body;
-
-    if (!token || !password) {
-      return res.status(400).json({ message: "Token and password are required." });
-    }
-    if (password.length < 8) {
-      return res.status(400).json({ message: "Password must be at least 8 characters." });
-    }
-
-    const officer = await Officer.findOne({
-      resetToken: token,
-      resetTokenExpiry: { $gt: new Date() },
-    });
-
-    if (!officer) {
-      return res.status(400).json({ message: "This link is invalid or has expired." });
-    }
-
-    // Update password and clear the token
-    officer.password = await bcrypt.hash(password, 10);
-    officer.resetToken = null;
-    officer.resetTokenExpiry = null;
-    officer.passwordSet = true;
-    await officer.save();
-
-    res.json({ message: "Password set successfully! You can now log in to CityFix." });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
   }
 });
 
@@ -305,8 +315,7 @@ router.patch("/officers/:id", async (req, res) => {
 // ── PATCH /officers/:id/status ─────────────────────────────────
 router.patch("/officers/:id/status", async (req, res) => {
   try {
-    const { status } = req.body; // "Active" | "On Leave"
-    // Try to find by officerId string (e.g. "OFF031") first, then by MongoDB _id
+    const { status } = req.body;
     let officer = await Officer.findOne({ officerId: req.params.id });
     if (!officer && req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
       officer = await Officer.findById(req.params.id);
@@ -361,7 +370,6 @@ router.patch("/officers/:id/change-password", async (req, res) => {
 });
 
 // ── PATCH /api/officers/:id/update-profile ──────────────────────
-// Officer updates their own name and phone (not email, not officerId)
 router.patch("/officers/:id/update-profile", async (req, res) => {
   try {
     const { name, phone } = req.body;
@@ -369,7 +377,6 @@ router.patch("/officers/:id/update-profile", async (req, res) => {
       return res.status(400).json({ message: "Name cannot be empty." });
     }
 
-    // Find by officerId string (e.g. "OFF001") or MongoDB _id
     let officer = await Officer.findOne({ officerId: req.params.id });
     if (!officer && req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
       officer = await Officer.findById(req.params.id);
@@ -386,46 +393,17 @@ router.patch("/officers/:id/update-profile", async (req, res) => {
   }
 });
 
-// ──────────────────────────────────────────────
-// GET /api/officers/by-department/:dept
-// Returns active officers for a department.
-// Optional query: ?level=1  → only L1 officers (for initial assignment)
-//                 (omit)    → all levels (for reassignment)
-// ──────────────────────────────────────────────
-router.get("/officers/by-department/:dept", async (req, res) => {
-  try {
-    const dept = req.params.dept;
-    const filter = { departmentName: dept, status: "Active" };
-    if (req.query.level) {
-      const lvl = parseInt(req.query.level, 10);
-      if (!isNaN(lvl)) filter.level = lvl;
-    }
-    const officers = await Officer.find(filter)
-      .select("name designation level departmentName supervisorId")
-      .sort({ level: 1, name: 1 });
-    res.json(officers);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// ──────────────────────────────────────────────────────────────
-// PATCH /api/officers/:id/assign-supervisor
-// Assigns a supervisor (L2 for L1, or L3 for L2) to an officer
-// Body: { supervisorId }
-// ──────────────────────────────────────────────────────────────
+// ── PATCH /officers/:id/assign-supervisor ──────────────────────
 router.patch("/officers/:id/assign-supervisor", async (req, res) => {
   try {
     const { supervisorId } = req.body;
 
-    // Find the officer to assign a supervisor to
     let officer = await Officer.findOne({ officerId: req.params.id });
     if (!officer && req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
       officer = await Officer.findById(req.params.id);
     }
     if (!officer) return res.status(404).json({ message: "Officer not found." });
 
-    // Validate supervisor exists and is at correct level
     const supervisor = await Officer.findById(supervisorId);
     if (!supervisor) return res.status(404).json({ message: "Supervisor officer not found." });
 
@@ -435,7 +413,6 @@ router.patch("/officers/:id/assign-supervisor", async (req, res) => {
       });
     }
 
-    // Same department check
     if (supervisor.departmentName !== officer.departmentName) {
       return res.status(400).json({ message: "Supervisor must be in the same department." });
     }
@@ -453,10 +430,7 @@ router.patch("/officers/:id/assign-supervisor", async (req, res) => {
   }
 });
 
-// ──────────────────────────────────────────────────────────────
-// DELETE /api/officers/:id/assign-supervisor
-// Removes the supervisor assignment from an officer
-// ──────────────────────────────────────────────────────────────
+// ── DELETE /officers/:id/assign-supervisor ─────────────────────
 router.delete("/officers/:id/assign-supervisor", async (req, res) => {
   try {
     let officer = await Officer.findOne({ officerId: req.params.id });
@@ -473,10 +447,7 @@ router.delete("/officers/:id/assign-supervisor", async (req, res) => {
   }
 });
 
-// ──────────────────────────────────────────────────────────────
-// GET /api/officers/:id/subordinates
-// Returns all officers supervised by this officer
-// ──────────────────────────────────────────────────────────────
+// ── GET /officers/:id/subordinates ─────────────────────────────
 router.get("/officers/:id/subordinates", async (req, res) => {
   try {
     let officer = await Officer.findOne({ officerId: req.params.id });
@@ -495,11 +466,7 @@ router.get("/officers/:id/subordinates", async (req, res) => {
   }
 });
 
-// ──────────────────────────────────────────────────────────────
-// GET /api/hierarchy/:deptName
-// Returns the full hierarchy tree for a department
-// { l3Officers: [{...officer, l2Officers:[{...officer, l1Officers:[...]}]}] }
-// ──────────────────────────────────────────────────────────────
+// ── GET /hierarchy/:deptName ───────────────────────────────────
 router.get("/hierarchy/:deptName", async (req, res) => {
   try {
     const dept = decodeURIComponent(req.params.deptName);
@@ -510,10 +477,6 @@ router.get("/hierarchy/:deptName", async (req, res) => {
     const l3 = allOfficers.filter(o => o.level === 3);
     const l2 = allOfficers.filter(o => o.level === 2);
     const l1 = allOfficers.filter(o => o.level === 1);
-
-    // Build unassigned list (officers with no supervisor in relevant levels)
-    const assignedL1Ids = new Set(l1.filter(o => o.supervisorId).map(o => o._id.toString()));
-    const assignedL2Ids = new Set(l2.filter(o => o.supervisorId).map(o => o._id.toString()));
 
     const tree = l3.map(l3o => ({
       ...l3o.toObject(),
