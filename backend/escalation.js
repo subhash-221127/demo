@@ -191,7 +191,7 @@ async function runEscalationCheck() {
     const now = new Date();
 
     // ── L1 → L2: assigned_at > 5 minutes ──────────────────────
-    const L1_SLA_MS = 1 * 30 * 1000; // 1 minutes
+    const L1_SLA_MS = 2 * 24 * 60 * 60 * 1000; // 24 hours
     const l1Cutoff = new Date(now - L1_SLA_MS);
 
     const l1OverdueComplaints = await Complaint.find({
@@ -256,7 +256,7 @@ async function runEscalationCheck() {
     }
 
     // ── L2 → L3: escalatedAt > 5 minutes, not yet at L3 ──────
-    const L2_SLA_MS = 2 * 60 * 1000; // 2 minutes
+    const L2_SLA_MS =  2 * 24 * 60 * 60 * 1000; // 2 minutes
     const l2Cutoff = new Date(now - L2_SLA_MS);
 
     const l2OverdueComplaints = await Complaint.find({
