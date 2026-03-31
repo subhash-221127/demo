@@ -356,7 +356,8 @@
 <body>
 
 <!-- SIDEBAR -->
-<aside class="sidebar">
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
   <a href="#" class="sidebar-logo">
     <div class="logo-icon">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
@@ -379,6 +380,7 @@
 <div class="main">
   <header class="header">
     <div class="header-left">
+      <button class="hamburger" onclick="openSidebar()" aria-label="Open menu"><span></span><span></span><span></span></button>
       <h1 class="page-title">Track Status</h1>
       <span class="page-sub">Track your complaint in real time</span>
     </div>
@@ -553,5 +555,32 @@
 <!-- ✅ FIX: src script and inline script are now properly separated -->
 <script src="api.js"></script>
 <script src="citizen_track.js"></script>
+<script>
+function toggleSidebar(){
+  document.getElementById("sidebar").classList.toggle("open");
+  document.getElementById("sidebarOverlay").classList.toggle("open");
+}
+function closeSidebar(){
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("sidebarOverlay").classList.remove("open");
+}
+// Close sidebar on nav link click (mobile)
+document.querySelectorAll(".sidebar-link").forEach(function(l){
+  l.addEventListener("click", closeSidebar);
+});
+</script>
+
+<script>
+function openSidebar() {
+  document.querySelector('.sidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+</script>
 </body>
 </html>

@@ -11,7 +11,8 @@
 <body>
 <div class="admin-layout">
 
-  <aside class="sidebar">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">C</div>
       <div class="sidebar-brand">City<span>Fix</span></div>
@@ -29,7 +30,7 @@
 
   <div class="main-content">
     <header class="topbar">
-      <div class="topbar-left">
+      <div class="topbar-left"><button class="hamburger" onclick="toggleSidebar()" aria-label="Menu"><span></span><span></span><span></span></button>
         <h1>Officer Request</h1>
         <span class="breadcrumb" id="breadcrumb">Loading…</span>
       </div>
@@ -138,6 +139,32 @@
     if (!document.getElementById('admin-profile').contains(e.target))
       document.getElementById('profile-dropdown').classList.remove('show');
   });
+</script>
+<script>
+function toggleSidebar(){
+  document.getElementById("sidebar").classList.toggle("open");
+  document.getElementById("sidebarOverlay").classList.toggle("open");
+}
+function closeSidebar(){
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("sidebarOverlay").classList.remove("open");
+}
+document.querySelectorAll(".sidebar-link").forEach(function(l){
+  l.addEventListener("click", closeSidebar);
+});
+</script>
+
+<script>
+function openSidebar() {
+  document.querySelector('.sidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
 </script>
 </body>
 </html>
