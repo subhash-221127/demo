@@ -556,32 +556,16 @@
 <!-- ✅ FIX: src script and inline script are now properly separated -->
 <script src="api.js"></script>
 <script src="citizen_track.js"></script>
-<script>
-function toggleSidebar(){
-  document.getElementById("sidebar").classList.toggle("open");
-  document.getElementById("sidebarOverlay").classList.toggle("open");
-}
-function closeSidebar(){
-  document.getElementById("sidebar").classList.remove("open");
-  document.getElementById("sidebarOverlay").classList.remove("open");
-}
-// Close sidebar on nav link click (mobile)
-document.querySelectorAll(".sidebar-link").forEach(function(l){
-  l.addEventListener("click", closeSidebar);
-});
-</script>
+
+
+
 
 <script>
-function openSidebar() {
-  document.querySelector('.sidebar').classList.add('open');
-  document.getElementById('sidebarOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeSidebar() {
-  document.querySelector('.sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
+// ── Sidebar ──
+function openSidebar()  { document.getElementById('sidebar').classList.add('open');    document.getElementById('sidebarOverlay').classList.add('open');    document.body.style.overflow = 'hidden'; }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); document.body.style.overflow = ''; }
+function toggleSidebar(){ document.getElementById('sidebar').classList.contains('open') ? closeSidebar() : openSidebar(); }
+document.querySelectorAll('.sidebar-link').forEach(l => l.addEventListener('click', closeSidebar));
 </script>
 </body>
 </html>
