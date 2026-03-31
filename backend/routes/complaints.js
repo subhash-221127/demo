@@ -12,9 +12,10 @@ const Officer      = require("../models/Officer");
 
 // ─────────────────────────────────────────────
 // Cloudinary + Multer storage setup
+// Files go into memory first, then streamed to Cloudinary
+// This avoids all multer-storage-cloudinary version conflicts
 // ─────────────────────────────────────────────
-const cloudinary              = require("cloudinary").v2;
-const { CloudinaryStorage }   = require("multer-storage-cloudinary");
+const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -22,16 +23,22 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const cloudinaryStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder:         "cityfix-evidence",
-    allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
-    transformation: [{ quality: "auto", fetch_format: "auto" }],
-  },
-});
+// Use memory storage — no disk, no version conflicts
+const upload = multer({ storage: multer.memoryStorage() });
 
-const upload = multer({ storage: cloudinaryStorage });
+// Helper: upload a buffer to Cloudinary and return the secure URL
+function uploadToCloudinary(buffer, mimetype) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "cityfix-evidence", resource_type: "image" },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result.secure_url);
+      }
+    );
+    stream.end(buffer);
+  });
+}
 
 const router = express.Router();
 
@@ -318,9 +325,15 @@ router.post("/create", upload.single("evidence"), async (req, res) => {
         lat: req.body.lat ? parseFloat(req.body.lat) : undefined,
         lng: req.body.lng ? parseFloat(req.body.lng) : undefined,
       },
-      evidencePaths: req.file ? [req.file.path] : [],  // Cloudinary URL
+      evidencePaths: [],
       status: "pending",
     });
+
+    // Upload evidence to Cloudinary if provided
+    if (req.file) {
+      const url = await uploadToCloudinary(req.file.buffer, req.file.mimetype);
+      complaint.evidencePaths = [url];
+    }
 
     await complaint.save();
 
@@ -527,17 +540,20 @@ router.patch("/complaint/:id/resolve", upload.single("evidence"), async (req, re
       return res.status(400).json({ message: "Resolution evidence photo is required to close a complaint." });
     }
 
+    // Upload resolution evidence to Cloudinary
+    const resolutionUrl = await uploadToCloudinary(req.file.buffer, req.file.mimetype);
+
     // Save resolution evidence (Cloudinary URL)
     complaint.resolutionEvidencePaths = complaint.resolutionEvidencePaths || [];
-    complaint.resolutionEvidencePaths.push(req.file.path);
+    complaint.resolutionEvidencePaths.push(resolutionUrl);
 
     // Run AI verification if citizen submitted original evidence
     const beforeEvidence = complaint.evidencePaths?.[0] || null;  // Cloudinary URL
     let aiResult = { score: null, passed: false, summary: "No citizen evidence to compare against." };
 
     if (beforeEvidence) {
-      console.log(`Running AI verification: before=${beforeEvidence} after=${req.file.path}`);
-      aiResult = await verifyResolutionWithAI(beforeEvidence, req.file.path);
+      console.log(`Running AI verification: before=${beforeEvidence} after=${resolutionUrl}`);
+      aiResult = await verifyResolutionWithAI(beforeEvidence, resolutionUrl);
       console.log(`AI result: score=${aiResult.score}, passed=${aiResult.passed}`);
     } else {
       // No before photo — flag for admin review with a note
