@@ -210,7 +210,7 @@ function openModal(mongoId, data) {
     ${c.evidence ? `
     <div class="modal-section">
       <div class="modal-section-title">Evidence</div>
-      <a href="${BASE_URL}/uploads/${c.evidence}" target="_blank" class="btn btn-outline btn-sm">
+      <a href=c.evidence target="_blank" class="btn btn-outline btn-sm">
         <i class="fa-solid fa-file"></i> View Attached File
       </a>
     </div>` : ""}

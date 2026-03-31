@@ -265,7 +265,7 @@ function openModal(mongoId) {
   const evidSec = document.getElementById('evidence-section');
   if (c.evidence) {
     evidSec.style.display = 'block';
-    document.getElementById('evidence-link').href = `${BASE_URL}/uploads/${c.evidence}`;
+    document.getElementById('evidence-link').href = c.evidence;
   } else {
     evidSec.style.display = 'none';
   }

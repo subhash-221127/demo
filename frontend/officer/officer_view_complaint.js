@@ -198,7 +198,7 @@ function renderOfficerDetail(c) {
   // Evidence HTML
   const evidenceHTML = c.evidencePaths.length > 0
     ? c.evidencePaths.map(e => `
-        <a href="${BASE_URL}/uploads/${e}" target="_blank" class="evidence-link">
+        <a href="${e}" target="_blank" class="evidence-link">
           <i class="fa-solid fa-file-image"></i> View Evidence File
         </a>`).join('')
     : '<p style="font-size:0.82rem;color:var(--slate-400);">No evidence uploaded yet.</p>';

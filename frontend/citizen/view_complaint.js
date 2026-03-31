@@ -332,7 +332,7 @@ function renderDetail(c) {
         <div class="info-section">
           <div class="info-section-title">📎 Evidence</div>
           <div style="padding:14px 18px;">
-            <a href="${BASE_URL}/uploads/${c.evidence}" target="_blank" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px;">
+            <a href=c.evidence target="_blank" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px;">
               <i class="fa-solid fa-file"></i> View Attached File
             </a>
           </div>
@@ -343,7 +343,7 @@ function renderDetail(c) {
           <div class="info-section-title" style="color:var(--green-dark);">✅ Resolution Evidence</div>
           <div style="padding:14px 18px;">
             <p style="font-size:0.85rem;color:var(--muted);margin-bottom:10px;">Officer submitted proof of resolution:</p>
-            <a href="${BASE_URL}/uploads/${c.resolutionEvidence}" target="_blank" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px;">
+            <a href=c.resolutionEvidence target="_blank" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px;">
               <i class="fa-solid fa-image"></i> View Resolution Photo
             </a>
           </div>
