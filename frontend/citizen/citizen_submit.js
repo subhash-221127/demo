@@ -343,7 +343,7 @@ formData.append("isAnonymous", isAnonymous ? "true" : "false");
 
   } catch (err) {
     console.error("Submit error:", err);
-    alert("Could not connect to server. Is the backend running on port 5000?");
+    alert("Something went wrong. Please try again. Please try again.");
     resetFab();
   }
 });

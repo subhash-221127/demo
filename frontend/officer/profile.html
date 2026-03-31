@@ -478,7 +478,7 @@
         msgEl.style.cssText = 'display:block;background:#fef2f2;color:#dc2626;font-size:0.82rem;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:10px;';
       }
     } catch {
-      msgEl.textContent = 'Cannot connect to server.';
+      msgEl.textContent = 'Something went wrong. Please try again.';
       msgEl.style.cssText = 'display:block;background:#fef2f2;color:#dc2626;font-size:0.82rem;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:10px;';
     }
   }
@@ -558,7 +558,7 @@
 
     } catch {
       const ls = document.getElementById('loading-state');
-      if (ls) { ls.style.display = 'block'; ls.innerHTML = '<p style="color:var(--red);">Could not load profile. Is the backend running?</p>'; }
+      if (ls) { ls.style.display = 'block'; ls.innerHTML = '<p style="color:var(--red);">Could not load profile. Please try again.</p>'; }
     }
   }
 

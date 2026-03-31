@@ -65,7 +65,7 @@ form.addEventListener("submit", async function (e) {
 
   } catch (err) {
     console.error("Login error:", err);
-    showError("Cannot connect to server. Is the backend running on port 5000?");
+    showError("Something went wrong. Please try again. Please try again.");
     btn.textContent = "Sign In";
     btn.disabled = false;
   }

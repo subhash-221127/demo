@@ -57,7 +57,7 @@ form.addEventListener("submit", async (e) => {
 
   } catch (err) {
     console.error("Signup error:", err);
-    showError("Cannot connect to server. Is the backend running on port 5000?");
+    showError("Something went wrong. Please try again. Please try again.");
     btn.textContent = "Create Account";
     btn.disabled = false;
   }

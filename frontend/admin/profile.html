@@ -269,7 +269,7 @@
 <script src="admin-auth.js"></script>
 <script src="theme.js"></script>
 <script>
-  const BASE_URL = 'http://localhost:5000';
+  const BASE_URL = '';
   const _raw = sessionStorage.getItem('cityfix_user');
   const _user = _raw ? JSON.parse(_raw) : {};
   const adminId = _user.id || '';
@@ -373,7 +373,7 @@
         showMsg('edit-msg', data.message || 'Update failed.', 'error');
       }
     } catch (e) {
-      showMsg('edit-msg', 'Cannot connect to server.', 'error');
+      showMsg('edit-msg', 'Something went wrong. Please try again.', 'error');
     }
     btn.disabled = false; btn.textContent = '💾 Save Changes';
   }
@@ -407,7 +407,7 @@
         showMsg('pwd-msg', data.message || 'Failed to update password.', 'error');
       }
     } catch (e) {
-      showMsg('pwd-msg', 'Cannot connect to server.', 'error');
+      showMsg('pwd-msg', 'Something went wrong. Please try again.', 'error');
     }
     btn.disabled = false; btn.textContent = '🔐 Update Password';
   }

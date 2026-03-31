@@ -310,7 +310,7 @@ async function loadDashboard() {
 
   } catch (err) {
     console.error("Failed to load dashboard:", err);
-    showToast("Could not connect to server. Is the backend running?", "");
+    showToast("Something went wrong. Please try again. Please try again.", "");
   }
 }
 

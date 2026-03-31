@@ -467,7 +467,7 @@
         btn.disabled = false;
       }
     } catch {
-      showError('Cannot connect to server. Is the backend running?');
+      showError('Something went wrong. Please try again. Please try again.');
       btn.textContent = 'Send OTP';
       btn.disabled = false;
     }
@@ -517,7 +517,7 @@
         document.getElementById('verify-btn').disabled = false;
       }
     } catch {
-      statusEl.textContent = '❌ Cannot connect to server.';
+      statusEl.textContent = '❌ Something went wrong. Please try again.';
       statusEl.style.color = '#ef4444';
       document.getElementById('verify-btn').disabled = false;
     }
@@ -608,7 +608,7 @@
 
     } catch {
       setLoading(false);
-      showError('Cannot connect to server. Is the backend running?');
+      showError('Something went wrong. Please try again. Please try again.');
     }
   }
 

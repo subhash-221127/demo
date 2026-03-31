@@ -140,7 +140,7 @@ async function loadComplaints() {
     filterComplaints();
   } catch {
     document.getElementById('error-state').style.display   = 'block';
-    document.getElementById('error-msg').textContent       = 'Could not connect to server. Is the backend running on port 5000?';
+    document.getElementById('error-msg').textContent       = 'Something went wrong. Please try again. Please try again.';
   }
 }
 
@@ -391,7 +391,7 @@ async function loadStats() {
 
   } catch {
     const ls = document.getElementById('loading-state');
-    if (ls) ls.innerHTML = '<p style="color:var(--red);">Could not load stats. Is the backend running?</p>';
+    if (ls) ls.innerHTML = '<p style="color:var(--red);">Could not load stats. Please try again.</p>';
   }
 }
 
@@ -489,7 +489,7 @@ async function loadProfile() {
 
   } catch {
     const ls = document.getElementById('loading-state');
-    if (ls) { ls.style.display = 'block'; ls.innerHTML = '<p style="color:var(--red);">Could not load profile. Is the backend running?</p>'; }
+    if (ls) { ls.style.display = 'block'; ls.innerHTML = '<p style="color:var(--red);">Could not load profile. Please try again.</p>'; }
   }
 }
 
@@ -540,7 +540,7 @@ async function saveOfficerProfile() {
       showToast(data.message || 'Failed to save.', 'error');
     }
   } catch {
-    showToast('Cannot connect to server.', 'error');
+    showToast('Something went wrong. Please try again.', 'error');
   }
   if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
 }

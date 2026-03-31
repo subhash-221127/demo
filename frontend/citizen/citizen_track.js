@@ -223,7 +223,7 @@ async function track(inputId) {
     // If backend has no /api/complaint/:id route, show a clear message
     error.innerHTML = `
       <i class="fa-solid fa-circle-exclamation"></i>
-      <span>Could not connect to server. Is the backend running on port 5000?</span>`;
+      <span>Something went wrong. Please try again. Please try again.</span>`;
     error.style.display = "flex";
     result.style.display = "none";
   } finally {

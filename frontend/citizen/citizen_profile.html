@@ -229,7 +229,7 @@
   <div class="toast" id="toast"></div>
 
 <script>
-  var BASE_URL = "http://localhost:5000";
+  var BASE_URL = "";
 
   var user = JSON.parse(sessionStorage.getItem('cityfix_user') || localStorage.getItem('cityfix_user') || '{}');
   if (!user || !user.id) window.location.replace('../login.html');
@@ -343,7 +343,7 @@
         if (msgEl) { msgEl.textContent = data.message || 'Update failed.'; msgEl.className = 'msg-inline error'; msgEl.style.display = 'block'; }
       }
     } catch(e) {
-      if (msgEl) { msgEl.textContent = 'Cannot connect to server.'; msgEl.className = 'msg-inline error'; msgEl.style.display = 'block'; }
+      if (msgEl) { msgEl.textContent = 'Something went wrong. Please try again.'; msgEl.className = 'msg-inline error'; msgEl.style.display = 'block'; }
     }
     btn.disabled = false; btn.textContent = 'Save Changes';
   };
@@ -424,7 +424,7 @@
         if (msgEl) { msgEl.textContent = data.message || 'Failed to change password.'; msgEl.className = 'msg-inline error'; msgEl.style.display = 'block'; }
       }
     } catch(e) {
-      if (msgEl) { msgEl.textContent = 'Cannot connect to server.'; msgEl.className = 'msg-inline error'; msgEl.style.display = 'block'; }
+      if (msgEl) { msgEl.textContent = 'Something went wrong. Please try again.'; msgEl.className = 'msg-inline error'; msgEl.style.display = 'block'; }
     }
     btn.disabled = false; btn.textContent = 'Change Password';
   };
