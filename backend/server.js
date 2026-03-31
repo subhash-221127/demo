@@ -2,12 +2,13 @@ const dns = require('dns');
 dns.setDefaultResultOrder('ipv4first');
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
+const cron = require("node-cron");
+const https = require("https");
 
 dotenv.config();
 const app = express();
@@ -46,6 +47,13 @@ app.use("/api", departmentRoutes);
 const adminRoutes = require("./routes/admin");
 app.use("/api", adminRoutes);
 
+// ---------------------------
+// Health Check Route (for UptimeRobot & self-ping)
+// ---------------------------
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
 // ── Escalation scheduler ──────────────────────────────────────
 const { startEscalationScheduler } = require("./escalation");
 
@@ -78,6 +86,22 @@ connectToMongo(MONGO_URI)
       }
     }
   });
+
+// ---------------------------
+// Self-Ping every 5 min to keep Render awake
+// ---------------------------
+cron.schedule("*/5 * * * *", () => {
+  const RENDER_URL = process.env.RENDER_URL;
+  if (!RENDER_URL) {
+    console.warn("[Keep-alive] RENDER_URL not set in .env, skipping ping.");
+    return;
+  }
+  https.get(`${RENDER_URL}/health`, (res) => {
+    console.log(`[Keep-alive] Pinged ${RENDER_URL}/health - Status: ${res.statusCode}`);
+  }).on("error", (err) => {
+    console.error("[Keep-alive] Ping failed:", err.message);
+  });
+});
 
 // ---------------------------
 // Start Server
